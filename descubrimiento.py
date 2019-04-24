@@ -80,9 +80,17 @@ def query(sock, nick):
 
     return user
 
-sock = connect_to_server()
-# data = list_users(sock)
-data = query(sock, 'mam')
-# data = register(sock, 'mam', '127.0.0.1', 9999, 'password', 'V0')
+def quit(sock):
+    command = 'QUIT'
+    sock.sendall(command.encode())
+    data = sock.recv(4096).decode()
 
+    return data
+
+sock = connect_to_server()
+
+# data = list_users(sock)
+# data = query(sock, 'mam')
+# data = register(sock, 'mam', '127.0.0.1', 9999, 'password', 'V0')
+data = quit(sock)
 print(data)
