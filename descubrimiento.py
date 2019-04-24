@@ -49,15 +49,16 @@ class DS_connection:
             if len(entry) == 0:
                 continue
 
-            [name, ip, port, time] = entry.split(' ')
+            # [name, ip, port, time] = entry.split(' ')
 
-            user = {
-            'name': name,
-            'ip': ip,
-            'port': port,
-            'time': time
-            }
-            array.append(user)
+            # user = {
+            # 'name': name,
+            # 'ip': ip,
+            # 'port': port,
+            # 'time': time
+            # }
+            # array.append(user)
+            array.append(entry.split(' '))
 
         return array
 
@@ -85,9 +86,12 @@ class DS_connection:
         return user
 
     def quit(self):
-        command = 'QUIT'
-        self.socket.sendall(command.encode())
-        data = self.socket.recv(4096).decode()
-        self.socket.close()
+        try:
+            command = 'QUIT'
+            self.socket.sendall(command.encode())
+            data = self.socket.recv(4096).decode()
+            self.socket.close()
 
-        return data
+            return data
+        except:
+            print('Error en quit')
