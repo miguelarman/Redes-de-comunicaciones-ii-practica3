@@ -14,6 +14,20 @@ def connect_to_server():
 
     return sock
 
+def register(sock, nick, ip, port, password, protocol):
+    command = 'REGISTER ' + nick + ' ' + ip + ' ' + str(port) + ' ' + password + ' ' + protocol
+    sock.sendall(command.encode())
+    data = sock.recv(4096).decode()
+
+    if (data[0:2] != 'OK'):
+        print('Error con la peticion')
+        print(data)
+        return
+
+    ts = data.split(' ')[3]
+
+    return ts
+
 def list_users(sock):
     command = 'LIST_USERS'
     sock.sendall(command.encode())
@@ -68,6 +82,7 @@ def query(sock, nick):
 
 sock = connect_to_server()
 # data = list_users(sock)
-# print(data)
-data = query(sock, 'agk')
+data = query(sock, 'mam')
+# data = register(sock, 'mam', '127.0.0.1', 9999, 'password', 'V0')
+
 print(data)
