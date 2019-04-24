@@ -1,8 +1,4 @@
 import socket
-import sys
-
-server_url = 'vega.ii.uam.es'
-server_port = 8000
 
 class DS_connection:
     def __init__(self, ip, port):
@@ -95,12 +91,3 @@ class DS_connection:
         self.socket.close()
 
         return data
-
-obj = DS_connection(server_url, server_port)
-obj.connect_to_server()
-
-# data = obj.list_users()
-# data = obj.query('mam')
-data = obj.register('mam', '127.0.0.1', 9999, 'password', 'V0')
-# data = obj.quit()
-print(data)
