@@ -66,7 +66,7 @@ class DS_connection:
         if (data[0:2] != 'OK'):
             print('Error con la peticion')
             print(data)
-            return
+            return 'ERROR'
 
         user = data[len('OK USER_FOUND '):]
 

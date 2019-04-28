@@ -202,7 +202,17 @@ class VideoClient(object):
 			# self.app.destroySubWindow('Usuarios')
 			print('Ha seleccionado el usuario {} con direccion {}:{}'.format(nick, ip, puerto))
 
+			# Obtiene datos del servidor DS
+			usuario = self.discover_server.query(nick)
+			if usuario == 'ERROR':
+				# TODO
+				print('Usuario {} no disponible'.format(nick))
+				return
+
 			# Establecer llamada
+			# self.conexion_de_control = ConexionDeControl(usuario)
+			# self.conexion_de_control.comienza_llamada()
+			
 
 
 if __name__ == '__main__':
