@@ -1,12 +1,14 @@
 ## GUI:
 
- - [ ] al iniciar la aplicacion ventana para iniciar sesion
+ - [x] Al iniciar la aplicacion ventana para iniciar sesion
 
- - [ ] guardar la lista de usuarios con un timestamp como argumento de la clase
+ - [ ] Guardar la lista de usuarios con un timestamp como argumento de la clase para no actualizarlo siempre
 
- - [ ] al seleccionar un usuario de la tabla cerrar esa ventana y llamar
+ - [ ] Al seleccionar un usuario de la tabla y llamar
 
- - [ ] botón de colgar
+ - [ ] Botón de colgar
+
+ - [ ] Statusbar que muestre duración de la llamada y FPS
 
 ## TCP
  - [x] Conexión al servidor DS

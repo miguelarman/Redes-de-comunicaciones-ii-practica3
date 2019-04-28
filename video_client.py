@@ -5,10 +5,16 @@ import numpy as np
 import cv2
 from descubrimiento import DS_connection
 import generales
+import utiles_sockets
+# from lista_usuarios import Lista_Usuarios
 
 class VideoClient(object):
 
 	def __init__(self, window_size):
+
+		# Inicializamos la lista de usuarios
+		# self.lista = Lista_Usuarios()
+		self.lista = None
 
 		# Creamos una variable que contenga el GUI principal
 		self.app = gui("Redes2 - P2P", window_size)
@@ -17,6 +23,8 @@ class VideoClient(object):
 		# Preparación del interfaz
 		self.app.addLabel("title", "Cliente Multimedia P2P - Redes2 ")
 		self.app.addImage("video", "imgs/webcam.gif")
+
+		# Añadimos icono de la aplicación
 
 		# Registramos la función de captura de video
 		# Esta misma función también sirve para enviar un vídeo
@@ -30,7 +38,10 @@ class VideoClient(object):
 
 		# Barra de estado
 		# Debe actualizarse con información útil sobre la llamada (duración, FPS, etc...)
-		self.app.addStatusbar(fields=2)
+		self.app.addStatusbar(fields=2, side='RIGHT')
+		self.app.setStatusbar("FPS: XX", 0)
+		self.app.setStatusbar("Duración de la llamada: 00:00", 1)
+		self.app.setStatusbarWidth(25, 1)
 
 		# Anadimos funcion al cerrar
 		self.app.setStopFunction(self.stopExecution)
@@ -42,6 +53,71 @@ class VideoClient(object):
 
 	def start(self):
 		self.app.go()
+
+	def login(self):
+		# Iniciar sesión
+		print('Pantalla de inicio de sesión')
+		try:
+			self.app.startSubWindow('Login', modal=True)
+		except appjar.ItemLookupError:
+			print('Ventana \'Login\' ya abierta')
+			self.app.showSubWindow('Login')
+			return
+
+		self.app.setSize(295, 207)
+
+		self.app.addLabel('usuario', 'Usuario:', 0, 0)
+		self.app.addLabel('pass', 'Contraseña:', 1, 0)
+		self.app.addLabel('ip', 'Dirección IP:', 2, 0)
+		self.app.addLabel('puerto', 'Puerto:', 3, 0)
+		self.app.addLabel('protocolo', 'Protocolo:', 4, 0)
+		self.app.addEntry('usuarioEnt', 0, 1)
+		self.app.addSecretEntry('passEnt', 1, 1)
+		self.app.addEntry('ipEnt', 2, 1)
+		self.app.addNumericEntry('puertoEnt', 3, 1)
+		self.app.addEntry('protEnt', 4, 1)
+
+		# Prefijar valores de ip, puerto y protocolo
+		ip_privada = utiles_sockets.getIPPrivada()
+		print('IP privada: {}'.format(ip_privada))
+		puerto_disponible = utiles_sockets.getPuertoLibre()
+		print('Puerto disponible: {}'.format(puerto_disponible))
+		self.app.setEntry('ipEnt', ip_privada)
+		self.app.setEntry('puertoEnt', puerto_disponible)
+		self.app.setEntry('protEnt', 'V0')
+
+		self.app.addButtons(["Aceptar", "Cancelar"], self.botones_login, colspan=2)
+		self.app.setFocus("usuarioEnt")
+		self.app.enableEnter(self.botones_login)
+		self.app.stopSubWindow()
+
+		self.app.hide()
+		self.app.showSubWindow('Login')
+
+
+	def botones_login(self, button):
+		if button == 'Cancelar':
+				self.app.hideSubWindow('Login')
+				self.app.stop()
+		elif button == "Aceptar":
+			# Leer los campos de inicio de sesión
+			self.usuario = self.app.getEntry("usuarioEnt")
+			self.password = self.app.getEntry("passEnt")
+			self.login_ip = self.app.getEntry("ipEnt")
+			self.login_puerto = self.app.getEntry("puertoEnt")
+			self.protocolo = self.app.getEntry("protEnt")
+			print('Usuario: {}. Contraseña: {}'.format(self.usuario, self.password))
+			print('Dirección IP: {}. Puerto: {}. Protocolo: {}'.format(self.login_ip, self.login_puerto, self.protocolo))
+
+			ret = self.discover_server.register(self.usuario, self.login_ip, self.login_puerto, self.password, self.protocolo)
+			if ret == 'OK':
+				print('Login correcto')
+				self.app.hideSubWindow('Login')
+				self.app.show()
+			else:
+				print('Login incorrecto')
+				self.app.errorBox("Login incorrecto", "Datos inválidos. Prueba de nuevo")
+				return
 
 	def stopExecution(self):
 		print('Cerrando conexión con el servidor DS')
@@ -90,7 +166,9 @@ class VideoClient(object):
 			# print('Se quiere conectar con el usuario {}'.format(nick))
 
 			# Lista todos los usuarios en el sistema
-			lista = self.discover_server.list_users()
+			if self.lista == None:
+				self.lista = self.discover_server.list_users()
+
 
 			# Creamos nueva ventana con todos los usuarios disponibles
 			# (o la mostramos si ya está creada)
@@ -105,27 +183,32 @@ class VideoClient(object):
 
 			self.app.setSize(550, 600)
 			self.app.addLabel("l2", 'Usuarios disponibles para llamar')
-			self.app.addTable('tabla', [['Nombre', 'Dirección IP', 'Puerto']], action = lambda i: self.selecciona_lista_usuarios(i, lista))
-			self.app.addTableRows('tabla', lista)
+			self.app.addTable('tabla', [['Nombre', 'Dirección IP', 'Puerto']], action = self.selecciona_lista_usuarios)
+			self.app.addTableRows('tabla', self.lista)
 			self.app.setTableWidth('tabla', 500)
 			self.app.setTableHeight('tabla', 550)
 			self.app.stopSubWindow()
 			self.app.showSubWindow('Usuarios')
 
-	def selecciona_lista_usuarios(self, index, lista):
-		nick, ip, puerto = lista[index][:-1]
+	def selecciona_lista_usuarios(self, index):
+		nick, ip, puerto = self.lista[index][:-1]
 
-		self.app.infoBox('Usuario seleccionado', 'Ha seleccionado al usuario {} con direccion {}:{}'.format(nick, ip, puerto))
-		# self.app.infoBox('Usuario seleccionado', 'Ha seleccionado al usuario {} con direccion {}:{}'.format(nick, ip, puerto), parent='Usuarios')
-		print('Seleccionado el usuario {} con direccion {}:{}'.format(nick, ip, puerto))
+		ret = self.app.okBox('Usuario seleccionado', 'Ha seleccionado al usuario {} con direccion {}:{}'.format(nick, ip, puerto))
 
-		self.app.hideSubWindow('Usuarios')
-		# self.app.destroySubWindow('Usuarios')
+		if ret == False:
+			return
+		else:
+			self.app.hideSubWindow('Usuarios')
+			# self.app.destroySubWindow('Usuarios')
+			print('Ha seleccionado el usuario {} con direccion {}:{}'.format(nick, ip, puerto))
+
+			# Establecer llamada
 
 
 if __name__ == '__main__':
 
 	vc = VideoClient("640x520")
+	vc.login()
 
 
 

@@ -21,13 +21,9 @@ class DS_connection:
         data = self.socket.recv(4096).decode()
 
         if (data[0:2] != 'OK'):
-            print('Error con la peticion')
-            print(data)
-            return
+            return data
 
-        ts = data.split(' ')[3]
-
-        return ts
+        return 'OK'
 
     def list_users(self):
         command = 'LIST_USERS'
