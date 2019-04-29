@@ -1,5 +1,6 @@
 import socket
 import generales
+import time
 
 class SocketEntrante(object):
     def __init__(self, gui, terminar):
@@ -26,6 +27,9 @@ class SocketEntrante(object):
 
     def retry(self):
         return self.__init__(self.gui, self.terminar)
+
+    def setEnLlamada(self, bool):
+        self.en_llamada = bool
 
     def go(self):
         while 1:
@@ -58,9 +62,8 @@ class SocketEntrante(object):
                         respuesta = 'DENY'
                         conn.sendall(respuesta)
                         conn.close()
+
+                time.sleep(generales.sleep_bucle)
             except:
                 print('Timeout en el socket de llamadas entrantes')
                 continue
-
-    def setEnLlamada(self, bool):
-        self.en_llamada = bool

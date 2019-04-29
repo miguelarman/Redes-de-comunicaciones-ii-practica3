@@ -3,12 +3,14 @@ from appJar import gui, appjar
 from PIL import Image, ImageTk
 import numpy as np
 import cv2
+import time
 from descubrimiento import DS_connection
 import generales
 import utiles_sockets
 import threading
 from llamadas_entrantes import SocketEntrante
 from control_terminar import ControlTerminar
+from receptor_frames import ReceptorFrames
 # from lista_usuarios import Lista_Usuarios
 
 class VideoClient(object):
@@ -165,6 +167,9 @@ class VideoClient(object):
 	def setSocketEntrante(self, entrantes):
 		self.socketEntrante = entrantes
 
+	def setReceptorFrames(self, receptor):
+		self.receptorFrames = receptor
+
 	def notifyCall(self, socket, conn, mensaje):
 		verbo, nick, puerto = mensaje.split(' ')
 
@@ -224,7 +229,7 @@ class VideoClient(object):
 			return
 		else:
 			self.app.hideSubWindow('Usuarios')
-			# self.app.destroySubWindow('Usuarios')
+
 			print('Ha seleccionado el usuario {} con direccion {}:{}'.format(nick, ip, puerto))
 
 			# Obtiene datos del servidor DS
@@ -234,18 +239,35 @@ class VideoClient(object):
 				print('Usuario {} no disponible'.format(nick))
 				return
 
+			# Avisamos al thread que se encarga de las llamadas entrantes
+			# de que vamos a entrar en llamada
+			self.socket_entrante.setEnLlamada(true)
+
+			self.enLlamada = True
+
 			# Establecer llamada
 
 			# Decimos al thread encargado del socket de entrada que estamos ocupados
-			# self.socket_entrante.setEnLlamada(true)
 
+# Funciones auxiliares
 
 def funcion_entrantes(entrantes, gui, control_terminar):
 	while entrantes.created == False:
 		if control_terminar.terminar() == True:
 			return
 		entrantes.retry()
+		time.sleep(generales.sleep_creacion)
+	print('SocketEntrante creado correctamente')
 	entrantes.go()
+
+def funcion_receptor_frames(receptor, gui, control_terminar):
+	while receptor.created == False:
+		if control_terminar.terminar() == True:
+			return
+		receptor.retry()
+		time.sleep(generales.sleep_creacion)
+	print('ReceptorFrames creado correctamente')
+	receptor.go()
 
 
 if __name__ == '__main__':
@@ -260,12 +282,15 @@ if __name__ == '__main__':
 	# en general, todo el código de inicialización que sea necesario
 	# ...
 	entrantes = SocketEntrante(vc, control_terminar)
-	hilo_llamadas_entrantes = threading.Thread(target = funcion_entrantes, args=(entrantes,vc,control_terminar,))
-	hilo_llamadas_entrantes.start()
-
-
+	thread_llamadas_entrantes = threading.Thread(target = funcion_entrantes, args=(entrantes,vc,control_terminar,))
 	vc.setSocketEntrante(entrantes)
 
+	receptor = ReceptorFrames(vc, control_terminar)
+	thread_receptor_frames = threading.Thread(target = funcion_receptor_frames, args=(receptor,vc,control_terminar,))
+	vc.setReceptorFrames(receptor)
+
+	thread_llamadas_entrantes.start()
+	thread_receptor_frames.start()
 	# Lanza el bucle principal del GUI
 	# El control ya NO vuelve de esta función, por lo que todas las
 	# acciones deberán ser gestionadas desde callbacks y threads
@@ -273,5 +298,6 @@ if __name__ == '__main__':
 
 	print('Terminando hilos')
 	control_terminar.setTerminar(True)
-	hilo_llamadas_entrantes.join()
+	thread_llamadas_entrantes.join()
+	thread_receptor_frames.join()
 	print('Hilos terminados')
