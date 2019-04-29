@@ -6,6 +6,9 @@ import cv2
 from descubrimiento import DS_connection
 import generales
 import utiles_sockets
+import threading
+from llamadas_entrantes import SocketEntrante
+from control_terminar import ControlTerminar
 # from lista_usuarios import Lista_Usuarios
 
 class VideoClient(object):
@@ -15,6 +18,9 @@ class VideoClient(object):
 		# Inicializamos la lista de usuarios
 		# self.lista = Lista_Usuarios()
 		self.lista = None
+		self.login_puerto = None
+		self.login_ip = None
+		self.logged = False
 
 		# Creamos una variable que contenga el GUI principal
 		self.app = gui("Redes2 - P2P", window_size)
@@ -104,7 +110,7 @@ class VideoClient(object):
 			self.usuario = self.app.getEntry("usuarioEnt")
 			self.password = self.app.getEntry("passEnt")
 			self.login_ip = self.app.getEntry("ipEnt")
-			self.login_puerto = self.app.getEntry("puertoEnt")
+			self.login_puerto = int(self.app.getEntry("puertoEnt"))
 			self.protocolo = self.app.getEntry("protEnt")
 			print('Usuario: {}. Contraseña: {}'.format(self.usuario, self.password))
 			print('Dirección IP: {}. Puerto: {}. Protocolo: {}'.format(self.login_ip, self.login_puerto, self.protocolo))
@@ -114,6 +120,7 @@ class VideoClient(object):
 				print('Login correcto')
 				self.app.hideSubWindow('Login')
 				self.app.show()
+				self.logged = True
 			else:
 				print('Login incorrecto')
 				self.app.errorBox("Login incorrecto", "Datos inválidos. Prueba de nuevo")
@@ -155,6 +162,17 @@ class VideoClient(object):
 			self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 			self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
+	def notifyCall(self, socket, conn, mensaje):
+		verbo, nick, puerto = mensaje.split(' ')
+
+		ret = self.app.okBox('pregunta', 'Llamada entrante de: {}'.format(nick))
+
+		if ret == True:
+			# Establecer Llamada
+			return 'ACCEPTED'
+		else:
+			return 'DENIED'
+
 	# Función que gestiona los callbacks de los botones
 	def buttonsCallback(self, button):
 		if button == "Salir":
@@ -190,6 +208,10 @@ class VideoClient(object):
 			self.app.stopSubWindow()
 			self.app.showSubWindow('Usuarios')
 
+		elif button == 'Colgar':
+			# De momento salimos directamente de la aplicación
+			self.app.stop()
+
 	def selecciona_lista_usuarios(self, index):
 		nick, ip, puerto = self.lista[index][:-1]
 
@@ -210,9 +232,17 @@ class VideoClient(object):
 				return
 
 			# Establecer llamada
-			# self.conexion_de_control = ConexionDeControl(usuario)
-			# self.conexion_de_control.comienza_llamada()
-			
+
+			# Decimos al thread encargado del socket de entrada que estamos ocupados
+			# self.socket_entrante.setEnLlamada(true)
+
+
+def funcion_entrantes(entrantes, gui, control_terminar):
+	while entrantes.created == False:
+		if control_terminar.terminar() == True:
+			return
+		entrantes = SocketEntrante(vc, control_terminar)
+	entrantes.go()
 
 
 if __name__ == '__main__':
@@ -220,14 +250,23 @@ if __name__ == '__main__':
 	vc = VideoClient("640x520")
 	vc.login()
 
+	control_terminar = ControlTerminar()
 
 
 	# Crear aquí los threads de lectura, de recepción y,
 	# en general, todo el código de inicialización que sea necesario
 	# ...
+	entrantes = SocketEntrante(vc, control_terminar)
+	hilo_llamadas_entrantes = threading.Thread(target = funcion_entrantes, args=(entrantes,vc,control_terminar,))
+	hilo_llamadas_entrantes.start()
 
 
 	# Lanza el bucle principal del GUI
 	# El control ya NO vuelve de esta función, por lo que todas las
 	# acciones deberán ser gestionadas desde callbacks y threads
 	vc.start()
+
+	print('terminando hilos')
+	control_terminar.setTerminar(True)
+	hilo_llamadas_entrantes.join()
+	print('hilos terminados')

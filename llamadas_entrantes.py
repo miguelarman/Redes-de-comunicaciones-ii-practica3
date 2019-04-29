@@ -1,0 +1,63 @@
+import socket
+import generales
+
+class SocketEntrante(object):
+    def __init__(self, gui, terminar):
+        if gui.logged == False:
+            self.created = False
+            return
+
+        self.created = True
+        self.terminar = terminar
+
+        self.ip = gui.login_ip
+        self.port = gui.login_puerto
+        print('{}:{}'.format(self.ip, self.port))
+
+        self.en_llamada = False
+
+        # Create a TCP/IP
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        # Hace bind y escucha
+        self.socket.bind((self.ip, self.port))
+        print('listening on {}:{}'.format(self.ip, self.port))
+
+
+    def go(self):
+        while 1:
+            if self.terminar.terminar() == True:
+                self.socket.close()
+                return
+
+            self.socket.settimeout(generales.timeout)
+            try:
+                self.socket.listen(1)
+
+                conn, addr = self.socket.accept()
+                print('Connected by', addr)
+
+                recibido = self.socket.recv(4096)
+
+                if self.en_llamada == True:
+                    respuesta = 'BUSY'
+                    conn.sendall(respuesta)
+                    conn.close()
+                    continue
+                else:
+                    ret = self.gui.notifyCall(self.socket, conn, recibido) # Ver qué argumento necesita
+                    if ret == 'ACCEPTED':
+                        # Sobreescribe el socket sin cerrarlo
+                        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        self.socket.bind((self.ip, self.port))
+                        print('listening on {}:{}'.format(self.ip, self.port))
+                    else:
+                        respuesta = 'DENY'
+                        conn.sendall(respuesta)
+                        conn.close()
+            except:
+                print('Timeout en el socket de llamadas entrantes')
+                continue
+
+    def setEnLlamada(self, bool):
+        self.en_llamada = bool
