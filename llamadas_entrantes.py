@@ -5,10 +5,11 @@ class SocketEntrante(object):
     def __init__(self, gui, terminar):
         if gui.logged == False:
             self.created = False
+            self.gui = gui
+            self.terminar = terminar
             return
 
         self.created = True
-        self.terminar = terminar
 
         self.ip = gui.login_ip
         self.port = gui.login_puerto
@@ -23,6 +24,8 @@ class SocketEntrante(object):
         self.socket.bind((self.ip, self.port))
         print('listening on {}:{}'.format(self.ip, self.port))
 
+    def retry(self):
+        return self.__init__(self.gui, self.terminar)
 
     def go(self):
         while 1:

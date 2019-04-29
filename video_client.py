@@ -162,6 +162,9 @@ class VideoClient(object):
 			self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 			self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
+	def setSocketEntrante(self, entrantes):
+		self.socketEntrante = entrantes
+
 	def notifyCall(self, socket, conn, mensaje):
 		verbo, nick, puerto = mensaje.split(' ')
 
@@ -241,7 +244,7 @@ def funcion_entrantes(entrantes, gui, control_terminar):
 	while entrantes.created == False:
 		if control_terminar.terminar() == True:
 			return
-		entrantes = SocketEntrante(vc, control_terminar)
+		entrantes.retry()
 	entrantes.go()
 
 
@@ -261,12 +264,14 @@ if __name__ == '__main__':
 	hilo_llamadas_entrantes.start()
 
 
+	vc.setSocketEntrante(entrantes)
+
 	# Lanza el bucle principal del GUI
 	# El control ya NO vuelve de esta función, por lo que todas las
 	# acciones deberán ser gestionadas desde callbacks y threads
 	vc.start()
 
-	print('terminando hilos')
+	print('Terminando hilos')
 	control_terminar.setTerminar(True)
 	hilo_llamadas_entrantes.join()
-	print('hilos terminados')
+	print('Hilos terminados')
