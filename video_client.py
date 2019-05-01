@@ -11,7 +11,7 @@ import threading
 from llamadas_entrantes import SocketEntrante
 from control_terminar import ControlTerminar
 from receptor_frames import ReceptorFrames
-# from lista_usuarios import Lista_Usuarios
+from conexion_de_control import ConexionDeControl
 
 class VideoClient(object):
 
@@ -23,6 +23,10 @@ class VideoClient(object):
 		self.login_puerto = None
 		self.login_ip = None
 		self.logged = False
+		self.enLlamada = False
+
+		# Adjudicamos un puerto libre para el puerto UDP entrante
+		self.UDP_port = utiles_sockets.getPuertoLibre()
 
 		# Creamos una variable que contenga el GUI principal
 		self.app = gui("Redes2 - P2P", window_size)
@@ -47,7 +51,7 @@ class VideoClient(object):
 		# Barra de estado
 		# Debe actualizarse con información útil sobre la llamada (duración, FPS, etc...)
 		self.app.addStatusbar(fields=2, side='RIGHT')
-		self.app.setStatusbar("FPS: XX", 0)
+		self.app.setStatusbar("FPS: 0", 0)
 		self.app.setStatusbar("Duración de la llamada: 00:00", 1)
 		self.app.setStatusbarWidth(25, 1)
 
@@ -168,12 +172,12 @@ class VideoClient(object):
 		self.socketEntrante = entrantes
 
 	def setReceptorFrames(self, receptor):
-		self.receptorFrames = receptor
+		self.receptor_frames = receptor
 
-	def notifyCall(self, socket, conn, mensaje):
+	def notifyCall(self, socket, conn, mensaje): # Ver qué argumentos necesita
 		verbo, nick, puerto = mensaje.split(' ')
 
-		ret = self.app.okBox('pregunta', 'Llamada entrante de: {}'.format(nick))
+		ret = self.app.okBox('Llamada entrante', 'Llamada entrante de: {}'.format(nick))
 
 		if ret == True:
 			# Establecer Llamada
@@ -184,12 +188,23 @@ class VideoClient(object):
 	# Función que gestiona los callbacks de los botones
 	def buttonsCallback(self, button):
 		if button == "Salir":
+			# Si está en llamada, antes de salirse termina la llamada
+			if self.enLlamada == True:
+				self.terminaLlamada()
+				return
+
+			print('Salir: en llamada {}'.format(self.enLlamada))
+
 			# Salimos de la aplicación
 			self.app.stop()
 		elif button == "Conectar":
 			# Entrada del nick del usuario a conectar
 			# nick = self.app.textBox("Conexión", "Introduce el nick del usuario a buscar")
 			# print('Se quiere conectar con el usuario {}'.format(nick))
+
+			# Si está en llamada no se muestra
+			if self.enLlamada == True:
+				return
 
 			# Lista todos los usuarios en el sistema
 			if self.lista == None:
@@ -217,19 +232,25 @@ class VideoClient(object):
 			self.app.showSubWindow('Usuarios')
 
 		elif button == 'Colgar':
+			print('Colgar llamada')
+			self.terminaLlamada()
+
+	def terminaLlamada(self):
+		if self.enLlamada:
+			self.enLlamada = False
+			self.socketEntrante.setEnLlamada(False)
 			# De momento salimos directamente de la aplicación
 			self.app.stop()
 
 	def selecciona_lista_usuarios(self, index):
 		nick, ip, puerto = self.lista[index][:-1]
+		puerto = int(puerto)
 
 		ret = self.app.okBox('Usuario seleccionado', 'Ha seleccionado al usuario {} con direccion {}:{}'.format(nick, ip, puerto))
 
 		if ret == False:
 			return
 		else:
-			self.app.hideSubWindow('Usuarios')
-
 			print('Ha seleccionado el usuario {} con direccion {}:{}'.format(nick, ip, puerto))
 
 			# Obtiene datos del servidor DS
@@ -241,13 +262,84 @@ class VideoClient(object):
 
 			# Avisamos al thread que se encarga de las llamadas entrantes
 			# de que vamos a entrar en llamada
-			self.socket_entrante.setEnLlamada(true)
+			self.socketEntrante.setEnLlamada(True)
 
 			self.enLlamada = True
 
-			# Establecer llamada
+			# TODO: Crear conexión de control con el otro usuario
+			self.conexion_de_control = ConexionDeControl(self, ip, puerto, nick)
+			ret = self.conexion_de_control.conecta()
+			if ret == 'TIMEOUT':
+				self.app.infoBox('Timeout', 'No se ha podido conectar con el usuario {} (timeout)'.format(nick))
+				self.conexion_de_control.cerrar()
+				self.conexion_de_control = None
+				self.socketEntrante.setEnLlamada(False)
+				self.enLlamada = False
+				self.app.hideSubWindow('Usuarios')
+				return 'ERROR'
+			elif ret == 'ERROR':
+				self.app.errorBox('Error cdc', 'Se ha detectado un error al abrir la conexión de control')
+				self.conexion_de_control.cerrar()
+				self.conexion_de_control = None
+				self.socketEntrante.setEnLlamada(False)
+				self.enLlamada = False
+				self.app.hideSubWindow('Usuarios')
+				return 'ERROR'
 
-			# Decimos al thread encargado del socket de entrada que estamos ocupados
+			while True:
+				ret = self.conexion_de_control.getPuertoUDP()
+				if ret == 'DENIED':
+					self.app.infoBox('Denied', 'El usuario {} ha denegado la llamada'.format(nick))
+					self.conexion_de_control.cerrar()
+					self.conexion_de_control = None
+					self.socketEntrante.setEnLlamada(False)
+					self.enLlamada = False
+					self.app.hideSubWindow('Usuarios')
+					return 'ERROR'
+				elif ret == 'BUSY':
+					self.app.infoBox('Busy', 'El usuario {} está ocupado'.format(nick))
+					self.conexion_de_control.cerrar()
+					self.conexion_de_control = None
+					self.socketEntrante.setEnLlamada(False)
+					self.enLlamada = False
+					self.app.hideSubWindow('Usuarios')
+					return 'ERROR'
+				elif ret == 'ERROR':
+					self.app.errorBox('Error cdc', 'Se ha detectado un error al llamar al usuario {}'.format(usuario))
+					self.conexion_de_control.cerrar()
+					self.conexion_de_control = None
+					self.socketEntrante.setEnLlamada(False)
+					self.enLlamada = False
+					self.app.hideSubWindow('Usuarios')
+					return 'ERROR'
+				elif ret == 'TIMEOUT':
+					aux = self.app.yesNoBox('Timeout', 'El usuario {} no ha respondido a la llamada. ¿Reintentar?'.format(nick))
+					if aux == True:
+						continue
+					else:
+						self.conexion_de_control.cerrar()
+						self.conexion_de_control = None
+						self.socketEntrante.setEnLlamada(False)
+						self.enLlamada = False
+						self.app.hideSubWindow('Usuarios')
+						return 'ERROR'
+				else:
+					self.puerto_UDP_destino = ret
+					self.app.hideSubWindow('Usuarios')
+					break
+
+			self.app.hideSubWindow('Usuarios')
+
+
+			print('Puerto UDP destino obtenido')
+
+			self.receptor_frames.configura_puerto(self.UDP_port)
+			print('Creado receptor de frames')
+			# self.puerto_UDP_saliente = PuertoUDPSaliente(self)
+			# print('Creado puerto UDP saliente')
+
+			# TODO: Empezar a enviar y recibir datos UDP
+			# TODO: implementar finalizacion de llamada
 
 # Funciones auxiliares
 

@@ -15,6 +15,16 @@ class ReceptorFrames:
     def retry(self):
         return self.__init__(self.gui, self.terminar)
 
+    def configura_puerto(self, puerto):
+        self.ip = self.gui.login_ip
+        self.puerto = puerto
+
+        # Configura el puerto
+        print('Creando el socket UDP...')
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        print('Puerto entrante configurado')
+        self.socket.bind((self.ip, self.puerto))
+
     def go(self):
         while 1:
             if self.terminar.terminar() == True:

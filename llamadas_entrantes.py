@@ -37,33 +37,40 @@ class SocketEntrante(object):
                 self.socket.close()
                 return
 
-            self.socket.settimeout(generales.timeout)
             try:
+                self.socket.settimeout(generales.timeout)
                 self.socket.listen(1)
+                self.socket.settimeout(None)
 
+                self.socket.settimeout(generales.timeout)
                 conn, addr = self.socket.accept()
+                self.socket.settimeout(None)
                 print('Connected by', addr)
 
-                recibido = self.socket.recv(4096)
+                recibido = conn.recv(4096).decode()
 
                 if self.en_llamada == True:
                     respuesta = 'BUSY'
-                    conn.sendall(respuesta)
+                    conn.sendall(respuesta.encode())
                     conn.close()
                     continue
                 else:
+                    print('Llamada entrante')
                     ret = self.gui.notifyCall(self.socket, conn, recibido) # Ver qué argumento necesita
                     if ret == 'ACCEPTED':
+                        # Responde con el puerto UDP disponible
+                        respuesta = 'CALL_ACCEPTED {} {}'.format(self.gui.usuario, self.gui.UDP_port)
+                        conn.sendall(respuesta.encode())
+
                         # Sobreescribe el socket sin cerrarlo
                         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                         self.socket.bind((self.ip, self.port))
-                        print('listening on {}:{}'.format(self.ip, self.port))
                     else:
                         respuesta = 'DENY'
-                        conn.sendall(respuesta)
+                        conn.sendall(respuesta.encode())
                         conn.close()
 
                 time.sleep(generales.sleep_bucle)
-            except:
+            except socket.timeout:
                 print('Timeout en el socket de llamadas entrantes')
                 continue

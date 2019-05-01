@@ -12,7 +12,7 @@
 
 ## TCP
  - [x] Conexión al servidor DS
- - [ ] Implementar conexión de control
+ - [x] Implementar conexión de control
 
 ## UDP
  - [ ] Implementar intercambio de vídeo
