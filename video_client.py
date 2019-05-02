@@ -26,7 +26,7 @@ class VideoClient(object):
 		self.enLlamada = False
 
 		# Adjudicamos un puerto libre para el puerto UDP entrante
-		self.UDP_port = utiles_sockets.getPuertoLibre()
+		self.puerto_UDP_origen = utiles_sockets.getPuertoLibre()
 
 		# Creamos una variable que contenga el GUI principal
 		self.app = gui("Redes2 - P2P", window_size)
@@ -236,11 +236,12 @@ class VideoClient(object):
 			self.terminaLlamada()
 
 	def terminaLlamada(self):
-		if self.enLlamada:
+		if self.enLlamada == True:
+			# TODO: De momento salimos directamente de la aplicación
+			self.app.stop()
+
 			self.enLlamada = False
 			self.socketEntrante.setEnLlamada(False)
-			# De momento salimos directamente de la aplicación
-			self.app.stop()
 
 	def selecciona_lista_usuarios(self, index):
 		nick, ip, puerto = self.lista[index][:-1]
@@ -252,6 +253,10 @@ class VideoClient(object):
 			return
 		else:
 			print('Ha seleccionado el usuario {} con direccion {}:{}'.format(nick, ip, puerto))
+
+			self.ip_destino = ip
+			self.puerto_TCP_destino = puerto
+			self.nick_destino = nick
 
 			# Obtiene datos del servidor DS
 			usuario = self.discover_server.query(nick)
@@ -267,8 +272,8 @@ class VideoClient(object):
 			self.enLlamada = True
 
 			# TODO: Crear conexión de control con el otro usuario
-			self.conexion_de_control = ConexionDeControl(self, ip, puerto, nick)
-			ret = self.conexion_de_control.conecta()
+			self.conexion_de_control = ConexionDeControl(self)
+			ret, descr = self.conexion_de_control.conecta()
 			if ret == 'TIMEOUT':
 				self.app.infoBox('Timeout', 'No se ha podido conectar con el usuario {} (timeout)'.format(nick))
 				self.conexion_de_control.cerrar()
@@ -278,7 +283,7 @@ class VideoClient(object):
 				self.app.hideSubWindow('Usuarios')
 				return 'ERROR'
 			elif ret == 'ERROR':
-				self.app.errorBox('Error cdc', 'Se ha detectado un error al abrir la conexión de control')
+				self.app.errorBox('Error cdc', 'Se ha detectado un error al abrir la conexión de control ({})'.format(descr))
 				self.conexion_de_control.cerrar()
 				self.conexion_de_control = None
 				self.socketEntrante.setEnLlamada(False)
@@ -305,7 +310,7 @@ class VideoClient(object):
 					self.app.hideSubWindow('Usuarios')
 					return 'ERROR'
 				elif ret == 'ERROR':
-					self.app.errorBox('Error cdc', 'Se ha detectado un error al llamar al usuario {}'.format(usuario))
+					self.app.errorBox('Error cdc', 'Se ha detectado un error al llamar al usuario {}'.format(nick))
 					self.conexion_de_control.cerrar()
 					self.conexion_de_control = None
 					self.socketEntrante.setEnLlamada(False)
@@ -328,13 +333,12 @@ class VideoClient(object):
 					self.app.hideSubWindow('Usuarios')
 					break
 
+			print('Puerto UDP destino obtenido: {}'.format(self.puerto_UDP_destino))
+
 			self.app.hideSubWindow('Usuarios')
 
-
-			print('Puerto UDP destino obtenido')
-
-			self.receptor_frames.configura_puerto(self.UDP_port)
-			print('Creado receptor de frames')
+			self.receptor_frames.configura_puerto()
+			print('Configurado el receptor de frames')
 			# self.puerto_UDP_saliente = PuertoUDPSaliente(self)
 			# print('Creado puerto UDP saliente')
 

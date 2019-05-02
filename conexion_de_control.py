@@ -2,13 +2,13 @@ import socket
 import generales
 
 class ConexionDeControl:
-    def __init__(self, gui, ip, puerto, nick):
+    def __init__(self, gui):
         self.gui = gui
         self.ip = gui.login_ip
         self.puerto = gui.login_puerto
-        self.ip_destino = ip
-        self.puerto_destino = puerto
-        self.nick_destino = nick
+        self.ip_destino = gui.ip_destino
+        self.puerto_destino = gui.puerto_TCP_destino
+        self.nick_destino = gui.nick_destino
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # self.socket.bind((self.ip, self.puerto))
@@ -19,16 +19,20 @@ class ConexionDeControl:
             self.socket.connect((self.ip_destino, self.puerto_destino))
             self.socket.settimeout(None)
         except socket.timeout:
-            return 'TIMEOUT'
+            return 'TIMEOUT', None
+        except ConnectionRefusedError:
+            return 'ERROR', 'Conection refused'
         except:
-            return 'ERROR'
+            return 'ERROR', 'Unexpected error'
+
+        return 'OK', None
 
     def cerrar(self):
         self.socket.close()
 
     def getPuertoUDP(self):
         nick = self.gui.usuario
-        UDP_port = self.gui.UDP_port
+        UDP_port = self.gui.puerto_UDP_origen
 
         mensaje = 'CALLING {} {}'.format(nick, UDP_port)
         self.socket.sendall(mensaje.encode())

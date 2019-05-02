@@ -15,9 +15,9 @@ class ReceptorFrames:
     def retry(self):
         return self.__init__(self.gui, self.terminar)
 
-    def configura_puerto(self, puerto):
+    def configura_puerto(self):
         self.ip = self.gui.login_ip
-        self.puerto = puerto
+        self.puerto = self.gui.puerto_UDP_origen
 
         # Configura el puerto
         print('Creando el socket UDP...')
