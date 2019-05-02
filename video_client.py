@@ -12,10 +12,11 @@ from llamadas_entrantes import SocketEntrante
 from control_terminar import ControlTerminar
 from receptor_frames import ReceptorFrames
 from conexion_de_control import ConexionDeControl
+from puerto_UDP_saliente import PuertoUDPSaliente
 
 class VideoClient(object):
 
-	def __init__(self, window_size):
+	def __init__(self, window_size, video=0):
 
 		# Inicializamos la lista de usuarios
 		# self.lista = Lista_Usuarios()
@@ -24,6 +25,8 @@ class VideoClient(object):
 		self.login_ip = None
 		self.logged = False
 		self.enLlamada = False
+
+		self.buffer_frames_recibidos = []
 
 		# Adjudicamos un puerto libre para el puerto UDP entrante
 		self.puerto_UDP_origen = utiles_sockets.getPuertoLibre()
@@ -41,7 +44,8 @@ class VideoClient(object):
 		# Registramos la función de captura de video
 		# Esta misma función también sirve para enviar un vídeo
 		# self.cap = cv2.VideoCapture(0)
-		self.cap = cv2.VideoCapture('videos/video.mp4')
+		# self.cap = cv2.VideoCapture('videos/video.mp4')
+		self.cap = cv2.VideoCapture(video)
 		self.app.setPollTime(20)
 		self.app.registerEvent(self.capturaVideo)
 
@@ -150,8 +154,17 @@ class VideoClient(object):
 		# Lo mostramos en el GUI
 		self.app.setImageData("video", img_tk, fmt = 'PhotoImage')
 
-		# Aquí tendría que el código que envia el frame a la red
-		# ...
+		# TODO: Si estamos en llamada, añadimos el frame
+		# al buffer de envío del socket UDP
+		if self.enLlamada == True:
+			# TODO: Codificamos el frame para enviarlo
+
+			# Enviamos el frame al thread encargado de enviarlos
+			self.puerto_UDP_saliente.nuevoFrame(img_tk)
+
+	def nuevoFrameRecibido(self, recibido):
+		# Guardamos el frame en el buffer para mostrarlo por pantalla (sin descodificarlo)
+		self.buffer_frames_recibidos.append(img_tk)
 
 	# Establece la resolución de la imagen capturada
 	def setImageResolution(self, resolution):
@@ -174,6 +187,9 @@ class VideoClient(object):
 	def setReceptorFrames(self, receptor):
 		self.receptor_frames = receptor
 
+	def setPuertoUDPSaliente(self, emisor):
+		self.puerto_UDP_saliente = emisor
+
 	def notifyCall(self, socket, conn, mensaje): # Ver qué argumentos necesita
 		verbo, nick, puerto = mensaje.split(' ')
 
@@ -181,6 +197,11 @@ class VideoClient(object):
 
 		if ret == True:
 			# Establecer Llamada
+			self.socketEntrante.setEnLlamada(True)
+
+			# TODO: Crear conexión de control, y preparar los sockets UDP salientes y entrantes
+
+			self.enLlamada = True
 			return 'ACCEPTED'
 		else:
 			return 'DENIED'
@@ -232,16 +253,25 @@ class VideoClient(object):
 			self.app.showSubWindow('Usuarios')
 
 		elif button == 'Colgar':
-			print('Colgar llamada')
 			self.terminaLlamada()
 
 	def terminaLlamada(self):
 		if self.enLlamada == True:
 			# TODO: De momento salimos directamente de la aplicación
+			self.conexion_de_control.terminaConexion()
+			self.receptor_frames.terminaConexion()
+			self.puerto_UDP_saliente.terminaConexion()
+
+			# Vaciamos el buffer de entrada
+			self.buffer_frames_recibidos = []
+
 			self.app.stop()
+			print('Llamada terminada')
 
 			self.enLlamada = False
 			self.socketEntrante.setEnLlamada(False)
+
+		print('No estás en llamada')
 
 	def selecciona_lista_usuarios(self, index):
 		nick, ip, puerto = self.lista[index][:-1]
@@ -269,9 +299,8 @@ class VideoClient(object):
 			# de que vamos a entrar en llamada
 			self.socketEntrante.setEnLlamada(True)
 
-			self.enLlamada = True
 
-			# TODO: Crear conexión de control con el otro usuario
+			# Crear conexión de control con el otro usuario
 			self.conexion_de_control = ConexionDeControl(self)
 			ret, descr = self.conexion_de_control.conecta()
 			if ret == 'TIMEOUT':
@@ -279,16 +308,16 @@ class VideoClient(object):
 				self.conexion_de_control.cerrar()
 				self.conexion_de_control = None
 				self.socketEntrante.setEnLlamada(False)
-				self.enLlamada = False
-				self.app.hideSubWindow('Usuarios')
+				# self.enLlamada = False
+				# self.app.hideSubWindow('Usuarios')
 				return 'ERROR'
 			elif ret == 'ERROR':
 				self.app.errorBox('Error cdc', 'Se ha detectado un error al abrir la conexión de control ({})'.format(descr))
 				self.conexion_de_control.cerrar()
 				self.conexion_de_control = None
 				self.socketEntrante.setEnLlamada(False)
-				self.enLlamada = False
-				self.app.hideSubWindow('Usuarios')
+				# self.enLlamada = False
+				# self.app.hideSubWindow('Usuarios')
 				return 'ERROR'
 
 			while True:
@@ -298,7 +327,7 @@ class VideoClient(object):
 					self.conexion_de_control.cerrar()
 					self.conexion_de_control = None
 					self.socketEntrante.setEnLlamada(False)
-					self.enLlamada = False
+					# self.enLlamada = False
 					self.app.hideSubWindow('Usuarios')
 					return 'ERROR'
 				elif ret == 'BUSY':
@@ -306,7 +335,7 @@ class VideoClient(object):
 					self.conexion_de_control.cerrar()
 					self.conexion_de_control = None
 					self.socketEntrante.setEnLlamada(False)
-					self.enLlamada = False
+					# self.enLlamada = False
 					self.app.hideSubWindow('Usuarios')
 					return 'ERROR'
 				elif ret == 'ERROR':
@@ -314,7 +343,7 @@ class VideoClient(object):
 					self.conexion_de_control.cerrar()
 					self.conexion_de_control = None
 					self.socketEntrante.setEnLlamada(False)
-					self.enLlamada = False
+					# self.enLlamada = False
 					self.app.hideSubWindow('Usuarios')
 					return 'ERROR'
 				elif ret == 'TIMEOUT':
@@ -339,11 +368,15 @@ class VideoClient(object):
 
 			self.receptor_frames.configura_puerto()
 			print('Configurado el receptor de frames')
-			# self.puerto_UDP_saliente = PuertoUDPSaliente(self)
-			# print('Creado puerto UDP saliente')
+			self.puerto_UDP_saliente.crea_puerto()
+			print('Configurado el puerto UDP saliente')
 
 			# TODO: Empezar a enviar y recibir datos UDP
 			# TODO: implementar finalizacion de llamada
+
+			# Indicamos que estamos en llamada cuando se establece
+			# correctamente para poder salir de la aplicación correctamente
+			self.enLlamada = True
 
 # Funciones auxiliares
 
@@ -351,6 +384,7 @@ def funcion_entrantes(entrantes, gui, control_terminar):
 	while entrantes.created == False:
 		if control_terminar.terminar() == True:
 			return
+		print('Reintentando configurar el SocketEntrante')
 		entrantes.retry()
 		time.sleep(generales.sleep_creacion)
 	print('SocketEntrante creado correctamente')
@@ -360,15 +394,26 @@ def funcion_receptor_frames(receptor, gui, control_terminar):
 	while receptor.created == False:
 		if control_terminar.terminar() == True:
 			return
+		print('Reintentando configurar el ReceptorFrames')
 		receptor.retry()
 		time.sleep(generales.sleep_creacion)
 	print('ReceptorFrames creado correctamente')
 	receptor.go()
 
+def funcion_UDP_saliente_frames(puerto_UDP_saliente, gui, control_terminar):
+	while puerto_UDP_saliente.created == False:
+		if control_terminar.terminar() == True:
+			return
+		print('Reintentando configurar el PuertoUDPSaliente')
+		puerto_UDP_saliente.retry()
+		time.sleep(generales.sleep_creacion)
+	print('PuertoUDPSaliente creado correctamente')
+	puerto_UDP_saliente.go()
+
 
 if __name__ == '__main__':
 
-	vc = VideoClient("640x520")
+	vc = VideoClient("640x520", video='videos/video.mp4')
 	vc.login()
 
 	control_terminar = ControlTerminar()
@@ -385,8 +430,14 @@ if __name__ == '__main__':
 	thread_receptor_frames = threading.Thread(target = funcion_receptor_frames, args=(receptor,vc,control_terminar,))
 	vc.setReceptorFrames(receptor)
 
+	puerto_UDP_saliente = PuertoUDPSaliente(vc, control_terminar)
+	thread_UDP_saliente_frames = threading.Thread(target = funcion_UDP_saliente_frames, args=(puerto_UDP_saliente,vc,control_terminar,))
+	vc.setPuertoUDPSaliente(puerto_UDP_saliente)
+
 	thread_llamadas_entrantes.start()
 	thread_receptor_frames.start()
+	thread_UDP_saliente_frames.start()
+
 	# Lanza el bucle principal del GUI
 	# El control ya NO vuelve de esta función, por lo que todas las
 	# acciones deberán ser gestionadas desde callbacks y threads
@@ -396,4 +447,5 @@ if __name__ == '__main__':
 	control_terminar.setTerminar(True)
 	thread_llamadas_entrantes.join()
 	thread_receptor_frames.join()
+	thread_UDP_saliente_frames.join()
 	print('Hilos terminados')

@@ -25,9 +25,24 @@ class ReceptorFrames:
         print('Puerto entrante configurado')
         self.socket.bind((self.ip, self.puerto))
 
+    def terminaConexion(self):
+        return
+
     def go(self):
         while 1:
             if self.terminar.terminar() == True:
                 return
 
-            time.sleep(generales.sleep_bucle)
+            try:
+                self.socket.settimeout(generales.timeout)
+                recibido, adress = self.socket.recvfrom(4096)
+                recibido.decode()
+                self.socket.settimeout(generales.timeout)
+
+                # Notificamos a la GUI de que tenemos un nuevo frame
+                self.gui.nuevoFrameRecibido(recibido)
+            except socket.timeout:
+                print('Timeout en el socket UDP receptor')
+                continue
+
+            # time.sleep(generales.sleep_bucle)

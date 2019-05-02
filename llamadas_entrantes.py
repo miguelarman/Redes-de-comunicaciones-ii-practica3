@@ -59,7 +59,7 @@ class SocketEntrante(object):
                     ret = self.gui.notifyCall(self.socket, conn, recibido) # Ver qué argumento necesita
                     if ret == 'ACCEPTED':
                         # Responde con el puerto UDP disponible
-                        respuesta = 'CALL_ACCEPTED {} {}'.format(self.gui.usuario, self.gui.UDP_port)
+                        respuesta = 'CALL_ACCEPTED {} {}'.format(self.gui.usuario, self.gui.puerto_UDP_origen)
                         conn.sendall(respuesta.encode())
 
                         # Sobreescribe el socket sin cerrarlo

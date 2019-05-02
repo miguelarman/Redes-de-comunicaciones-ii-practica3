@@ -30,6 +30,9 @@ class ConexionDeControl:
     def cerrar(self):
         self.socket.close()
 
+    def terminaConexion(self):
+        return
+
     def getPuertoUDP(self):
         nick = self.gui.usuario
         UDP_port = self.gui.puerto_UDP_origen
