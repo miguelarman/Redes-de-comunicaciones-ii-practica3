@@ -10,6 +10,7 @@ class ReceptorFrames:
             self.terminar = terminar
             return
         self.created = True
+        self.configurado = False
 
 
     def retry(self):
@@ -25,6 +26,8 @@ class ReceptorFrames:
         print('Puerto entrante configurado')
         self.socket.bind((self.ip, self.puerto))
 
+        self.configurado = True
+
     def terminaConexion(self):
         return
 
@@ -33,11 +36,14 @@ class ReceptorFrames:
             if self.terminar.terminar() == True:
                 return
 
+            if self.configurado == False:
+                time.sleep(generales.sleep_bucle)
+                continue
+
             try:
                 self.socket.settimeout(generales.timeout)
                 recibido, adress = self.socket.recvfrom(4096)
-                recibido.decode()
-                self.socket.settimeout(generales.timeout)
+                self.socket.settimeout(0)
 
                 # Notificamos a la GUI de que tenemos un nuevo frame
                 self.gui.nuevoFrameRecibido(recibido)

@@ -2,16 +2,18 @@ import socket
 import generales
 
 class ConexionDeControl:
-    def __init__(self, gui):
+    def __init__(self, gui, conn=None):
         self.gui = gui
         self.ip = gui.login_ip
         self.puerto = gui.login_puerto
-        self.ip_destino = gui.ip_destino
-        self.puerto_destino = gui.puerto_TCP_destino
-        self.nick_destino = gui.nick_destino
 
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        # self.socket.bind((self.ip, self.puerto))
+        if conn == None:
+            self.ip_destino = gui.ip_destino
+            self.puerto_destino = gui.puerto_TCP_destino
+            self.nick_destino = gui.nick_destino
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        else:
+            self.socket = conn
 
     def conecta(self):
         try:
@@ -30,8 +32,18 @@ class ConexionDeControl:
     def cerrar(self):
         self.socket.close()
 
+    def mandaPuertoUDP(self):
+        recibido = conn.recv(4096).decode()
+        print('Recibido en el handshake: {}'.format(recibido))
+
     def terminaConexion(self):
         return
+
+    def enviarPuertoUDP(self):
+        respuesta = 'CALL_ACCEPTED {} {}'.format(self.gui.usuario, self.gui.puerto_UDP_origen)
+        self.socket.sendall(respuesta.encode())
+        print('Respuesta: {}'.format(respuesta))
+
 
     def getPuertoUDP(self):
         nick = self.gui.usuario
@@ -39,6 +51,7 @@ class ConexionDeControl:
 
         mensaje = 'CALLING {} {}'.format(nick, UDP_port)
         self.socket.sendall(mensaje.encode())
+
         try:
             self.socket.settimeout(generales.timeout_handshake)
             recibido = self.socket.recv(4096).decode()
@@ -54,6 +67,7 @@ class ConexionDeControl:
         elif comando == 'CALL_BUSY':
             return 'BUSY'
         elif comando == 'CALL_ACCEPTED':
+            print('Recibido: {}'.format(palabras))
             nick = palabras[1]
             puerto_UDP_destino = palabras[2]
             return puerto_UDP_destino

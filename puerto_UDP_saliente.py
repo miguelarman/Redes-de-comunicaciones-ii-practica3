@@ -37,9 +37,10 @@ class PuertoUDPSaliente:
 
             # TODO: Si tiene frames pendientes por mandar, los envía
             if len(self.buffer_envio) > 0:
-                # Envía el frame correspondiente
-                # data = -------
-                # self.socket.sendto(data.encode(), (self.ip_destino, self.puerto_UDP_destino))
+                # TODO: Envía el frame correspondiente
+                frame = self.buffer_envio.pop(0)
+                data = frame
+                self.socket.sendto(data, (self.ip_destino, self.puerto_UDP_destino))
                 continue
 
             time.sleep(generales.sleep_bucle)

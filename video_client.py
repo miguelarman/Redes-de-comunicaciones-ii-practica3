@@ -4,6 +4,7 @@ from PIL import Image, ImageTk
 import numpy as np
 import cv2
 import time
+import sys
 from descubrimiento import DS_connection
 import generales
 import utiles_sockets
@@ -48,6 +49,10 @@ class VideoClient(object):
 		self.cap = cv2.VideoCapture(video)
 		self.app.setPollTime(20)
 		self.app.registerEvent(self.capturaVideo)
+
+		# TODO: Registramos la funcion que muestra los frames recibido
+		self.app.setPollTime(20)
+		self.app.registerEvent(self.recibeFrame)
 
 		# Añadir los botones
 		self.app.addButtons(["Conectar", "Colgar", "Salir"], self.buttonsCallback)
@@ -152,19 +157,45 @@ class VideoClient(object):
 		img_tk = ImageTk.PhotoImage(Image.fromarray(cv2_im))
 
 		# Lo mostramos en el GUI
-		self.app.setImageData("video", img_tk, fmt = 'PhotoImage')
+		if self.enLlamada == False:
+			# TODO: De momento reutilizamos el frame
+			self.app.setImageData("video", img_tk, fmt = 'PhotoImage')
 
 		# TODO: Si estamos en llamada, añadimos el frame
 		# al buffer de envío del socket UDP
 		if self.enLlamada == True:
 			# TODO: Codificamos el frame para enviarlo
+			# Compresión JPG al 50% de resolución (se puede variar)
+			encode_param = [cv2.IMWRITE_JPEG_QUALITY,50]
+			result, encimg = cv2.imencode('.jpg', frame, encode_param)
+			if result == False:
+				print('Error al codificar imagen')
+				encimg = encimg.tobytes()
+				# Los datos "encimg" ya están listos para su envío por la red
 
 			# Enviamos el frame al thread encargado de enviarlos
-			self.puerto_UDP_saliente.nuevoFrame(img_tk)
+			self.puerto_UDP_saliente.nuevoFrame(encimg)
+
+	def recibeFrame(self):
+		if self.enLlamada == True:
+			if len(self.buffer_frames_recibidos) > 0:
+				encimg = self.buffer_frames_recibidos.pop(0)
+
+				# Descompresión de los datos, una vez recibidos
+				decimg = cv2.imdecode(np.frombuffer(encimg,np.uint8), 1)
+
+				# Conversión de formato para su uso en el GUI
+				cv2_im = cv2.cvtColor(decimg,cv2.COLOR_BGR2RGB)
+				img_tk = ImageTk.PhotoImage(Image.fromarray(cv2_im))
+
+				self.app.setImageData("video", img_tk, fmt = 'PhotoImage')
+			# else:
+				# print('No hay más frames para mostrar por pantalla')
+
 
 	def nuevoFrameRecibido(self, recibido):
 		# Guardamos el frame en el buffer para mostrarlo por pantalla (sin descodificarlo)
-		self.buffer_frames_recibidos.append(img_tk)
+		self.buffer_frames_recibidos.append(recibido)
 
 	# Establece la resolución de la imagen capturada
 	def setImageResolution(self, resolution):
@@ -199,9 +230,21 @@ class VideoClient(object):
 			# Establecer Llamada
 			self.socketEntrante.setEnLlamada(True)
 
-			# TODO: Crear conexión de control, y preparar los sockets UDP salientes y entrantes
+			# Crear conexión de control, y preparar los sockets UDP salientes y entrantes
+			self.conexion_de_control = ConexionDeControl(self, conn=conn)
+			print('Recibido en el handsake: {}'.format(mensaje))
+			self.puerto_UDP_destino = int(puerto)
+			self.nick_destino = nick
+			self.ip_destino = self.discover_server.query(nick)['ip']
+			self.conexion_de_control.enviarPuertoUDP()
+
+			self.receptor_frames.configura_puerto()
+			print('Configurado el receptor de frames')
+			self.puerto_UDP_saliente.crea_puerto()
+			print('Configurado el puerto UDP saliente')
 
 			self.enLlamada = True
+
 			return 'ACCEPTED'
 		else:
 			return 'DENIED'
@@ -265,13 +308,13 @@ class VideoClient(object):
 			# Vaciamos el buffer de entrada
 			self.buffer_frames_recibidos = []
 
-			self.app.stop()
+			# self.app.stop()
 			print('Llamada terminada')
 
 			self.enLlamada = False
 			self.socketEntrante.setEnLlamada(False)
-
-		print('No estás en llamada')
+		else:
+			print('No estás en llamada')
 
 	def selecciona_lista_usuarios(self, index):
 		nick, ip, puerto = self.lista[index][:-1]
@@ -292,7 +335,7 @@ class VideoClient(object):
 			usuario = self.discover_server.query(nick)
 			if usuario == 'ERROR':
 				# TODO
-				print('Usuario {} no disponible'.format(nick))
+				print('Usuario {} no disponible (Error en el DS)'.format(nick))
 				return
 
 			# Avisamos al thread que se encarga de las llamadas entrantes
@@ -358,7 +401,7 @@ class VideoClient(object):
 						self.app.hideSubWindow('Usuarios')
 						return 'ERROR'
 				else:
-					self.puerto_UDP_destino = ret
+					self.puerto_UDP_destino = int(ret)
 					self.app.hideSubWindow('Usuarios')
 					break
 
@@ -371,7 +414,6 @@ class VideoClient(object):
 			self.puerto_UDP_saliente.crea_puerto()
 			print('Configurado el puerto UDP saliente')
 
-			# TODO: Empezar a enviar y recibir datos UDP
 			# TODO: implementar finalizacion de llamada
 
 			# Indicamos que estamos en llamada cuando se establece
@@ -384,7 +426,7 @@ def funcion_entrantes(entrantes, gui, control_terminar):
 	while entrantes.created == False:
 		if control_terminar.terminar() == True:
 			return
-		print('Reintentando configurar el SocketEntrante')
+		# print('Reintentando configurar el SocketEntrante')
 		entrantes.retry()
 		time.sleep(generales.sleep_creacion)
 	print('SocketEntrante creado correctamente')
@@ -394,7 +436,7 @@ def funcion_receptor_frames(receptor, gui, control_terminar):
 	while receptor.created == False:
 		if control_terminar.terminar() == True:
 			return
-		print('Reintentando configurar el ReceptorFrames')
+		# print('Reintentando configurar el ReceptorFrames')
 		receptor.retry()
 		time.sleep(generales.sleep_creacion)
 	print('ReceptorFrames creado correctamente')
@@ -404,7 +446,7 @@ def funcion_UDP_saliente_frames(puerto_UDP_saliente, gui, control_terminar):
 	while puerto_UDP_saliente.created == False:
 		if control_terminar.terminar() == True:
 			return
-		print('Reintentando configurar el PuertoUDPSaliente')
+		# print('Reintentando configurar el PuertoUDPSaliente')
 		puerto_UDP_saliente.retry()
 		time.sleep(generales.sleep_creacion)
 	print('PuertoUDPSaliente creado correctamente')
@@ -413,7 +455,8 @@ def funcion_UDP_saliente_frames(puerto_UDP_saliente, gui, control_terminar):
 
 if __name__ == '__main__':
 
-	vc = VideoClient("640x520", video='videos/video.mp4')
+	# vc = VideoClient("640x520", video='videos/video.mp4')
+	vc = VideoClient("640x520", video='videos/video2.mp4')
 	vc.login()
 
 	control_terminar = ControlTerminar()
