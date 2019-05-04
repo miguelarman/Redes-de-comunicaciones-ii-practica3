@@ -37,11 +37,11 @@ class ReceptorFrames:
                 return
 
             if self.configurado == False:
-                time.sleep(generales.sleep_bucle)
+                time.sleep(generales.sleep_bucle_udp)
                 continue
 
             try:
-                self.socket.settimeout(generales.timeout)
+                self.socket.settimeout(generales.timeout_udp)
                 recibido, adress = self.socket.recvfrom(4096)
                 self.socket.settimeout(0)
 

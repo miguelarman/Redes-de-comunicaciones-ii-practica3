@@ -10,7 +10,7 @@
  - [x] Conexión al servidor DS
  - [x] Implementar conexión de control
   - [ ] Implementar códigos de control
-  - [ ] Thread que lea constantemente del socket de control
+  - [x] Thread que lea constantemente del socket de control
   - [ ] Control del buffer de frames recibidos
   - [ ] Comandos de pausa, calidad...
 

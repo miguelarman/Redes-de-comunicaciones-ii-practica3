@@ -149,32 +149,33 @@ class VideoClient(object):
 
 	# Función que captura el frame a mostrar en cada momento
 	def capturaVideo(self):
+		# Si no hemos iniciado sesión, no capturamos vídeo
+		if self.logged == True:
+			# Capturamos un frame de la cámara o del vídeo
+			ret, frame = self.cap.read()
+			frame = cv2.resize(frame, (640,480))
+			cv2_im = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
+			img_tk = ImageTk.PhotoImage(Image.fromarray(cv2_im))
 
-		# Capturamos un frame de la cámara o del vídeo
-		ret, frame = self.cap.read()
-		frame = cv2.resize(frame, (640,480))
-		cv2_im = cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
-		img_tk = ImageTk.PhotoImage(Image.fromarray(cv2_im))
+			# Lo mostramos en el GUI
+			if self.enLlamada == False:
+				# TODO: De momento reutilizamos el frame
+				self.app.setImageData("video", img_tk, fmt = 'PhotoImage')
 
-		# Lo mostramos en el GUI
-		if self.enLlamada == False:
-			# TODO: De momento reutilizamos el frame
-			self.app.setImageData("video", img_tk, fmt = 'PhotoImage')
+			# TODO: Si estamos en llamada, añadimos el frame
+			# al buffer de envío del socket UDP
+			if self.enLlamada == True:
+				# TODO: Codificamos el frame para enviarlo
+				# Compresión JPG al 50% de resolución (se puede variar)
+				encode_param = [cv2.IMWRITE_JPEG_QUALITY,50]
+				result, encimg = cv2.imencode('.jpg', frame, encode_param)
+				if result == False:
+					print('Error al codificar imagen')
+					encimg = encimg.tobytes()
+					# Los datos "encimg" ya están listos para su envío por la red
 
-		# TODO: Si estamos en llamada, añadimos el frame
-		# al buffer de envío del socket UDP
-		if self.enLlamada == True:
-			# TODO: Codificamos el frame para enviarlo
-			# Compresión JPG al 50% de resolución (se puede variar)
-			encode_param = [cv2.IMWRITE_JPEG_QUALITY,50]
-			result, encimg = cv2.imencode('.jpg', frame, encode_param)
-			if result == False:
-				print('Error al codificar imagen')
-				encimg = encimg.tobytes()
-				# Los datos "encimg" ya están listos para su envío por la red
-
-			# Enviamos el frame al thread encargado de enviarlos
-			self.puerto_UDP_saliente.nuevoFrame(encimg)
+				# Enviamos el frame al thread encargado de enviarlos
+				self.puerto_UDP_saliente.nuevoFrame(encimg)
 
 	def recibeFrame(self):
 		if self.enLlamada == True:
@@ -196,6 +197,10 @@ class VideoClient(object):
 	def nuevoFrameRecibido(self, recibido):
 		# Guardamos el frame en el buffer para mostrarlo por pantalla (sin descodificarlo)
 		self.buffer_frames_recibidos.append(recibido)
+
+	def codigoControlRecibido(self, recibido):
+		# TODO: Manejamos la llamada dependiendo del código recibido
+		return
 
 	# Establece la resolución de la imagen capturada
 	def setImageResolution(self, resolution):
@@ -221,6 +226,9 @@ class VideoClient(object):
 	def setPuertoUDPSaliente(self, emisor):
 		self.puerto_UDP_saliente = emisor
 
+	def setConexionDeControl(self, cdc):
+		self.conexion_de_control = cdc
+
 	def notifyCall(self, socket, conn, mensaje): # Ver qué argumentos necesita
 		verbo, nick, puerto = mensaje.split(' ')
 
@@ -231,8 +239,9 @@ class VideoClient(object):
 			self.socketEntrante.setEnLlamada(True)
 
 			# Crear conexión de control, y preparar los sockets UDP salientes y entrantes
-			self.conexion_de_control = ConexionDeControl(self, conn=conn)
-			print('Recibido en el handsake: {}'.format(mensaje))
+			self.conexion_de_control.establece_socket(conn=conn)
+			print('Conexion de control establecida')
+
 			self.puerto_UDP_destino = int(puerto)
 			self.nick_destino = nick
 			self.ip_destino = self.discover_server.query(nick)['ip']
@@ -344,7 +353,7 @@ class VideoClient(object):
 
 
 			# Crear conexión de control con el otro usuario
-			self.conexion_de_control = ConexionDeControl(self)
+			self.conexion_de_control.establece_socket()
 			ret, descr = self.conexion_de_control.conecta()
 			if ret == 'TIMEOUT':
 				self.app.infoBox('Timeout', 'No se ha podido conectar con el usuario {} (timeout)'.format(nick))
@@ -452,6 +461,16 @@ def funcion_UDP_saliente_frames(puerto_UDP_saliente, gui, control_terminar):
 	print('PuertoUDPSaliente creado correctamente')
 	puerto_UDP_saliente.go()
 
+def funcion_conexion_control(conexion_de_control, gui, control_terminar):
+	while conexion_de_control.created == False:
+		if control_terminar.terminar() == True:
+			return
+		# print('Reintentando configurar el PuertoUDPSaliente')
+		conexion_de_control.retry()
+		time.sleep(generales.sleep_creacion)
+	print('ConexionDeControl creada correctamente')
+	conexion_de_control.go()
+
 
 if __name__ == '__main__':
 
@@ -476,6 +495,10 @@ if __name__ == '__main__':
 	puerto_UDP_saliente = PuertoUDPSaliente(vc, control_terminar)
 	thread_UDP_saliente_frames = threading.Thread(target = funcion_UDP_saliente_frames, args=(puerto_UDP_saliente,vc,control_terminar,))
 	vc.setPuertoUDPSaliente(puerto_UDP_saliente)
+
+	conexion_de_control = ConexionDeControl(vc, control_terminar)
+	thread_conexion_de_control = threading.Thread(target = funcion_conexion_control, args=(conexion_de_control, vc, control_terminar))
+	vc.setConexionDeControl(conexion_de_control)
 
 	thread_llamadas_entrantes.start()
 	thread_receptor_frames.start()

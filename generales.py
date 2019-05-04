@@ -4,4 +4,6 @@ timeout = 5
 timeout_connect = 15
 timeout_handshake = 15
 sleep_bucle = 10
+sleep_bucle_udp = 1
+timeout_udp = 1
 sleep_creacion = 1

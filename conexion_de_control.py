@@ -2,15 +2,26 @@ import socket
 import generales
 
 class ConexionDeControl:
-    def __init__(self, gui, conn=None):
-        self.gui = gui
-        self.ip = gui.login_ip
-        self.puerto = gui.login_puerto
+    def __init__(self, gui, terminar):
+        if gui.logged == False:
+            self.created = False
+            self.gui = gui
+            self.terminar = terminar
+            self.ip = gui.login_ip
+            self.puerto = gui.login_puerto
+            return
+        self.created = True
 
+        return
+
+    def retry(self):
+        return self.__init__(self.gui, self.terminar)
+
+    def establece_socket(self, conn=None):
         if conn == None:
-            self.ip_destino = gui.ip_destino
-            self.puerto_destino = gui.puerto_TCP_destino
-            self.nick_destino = gui.nick_destino
+            self.ip_destino = self.gui.ip_destino
+            self.puerto_destino = self.gui.puerto_TCP_destino
+            self.nick_destino = self.gui.nick_destino
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         else:
             self.socket = conn
@@ -73,3 +84,24 @@ class ConexionDeControl:
             return puerto_UDP_destino
         else:
             return 'ERROR'
+
+    def go(self):
+        while True:
+            if self.terminar.terminar() == True:
+                return
+
+            if self.gui.enLlamada == True:
+
+                try:
+                    self.socket.settimeout(generales.timeout)
+                    recibido, adress = self.socket.recv(4096)
+                    self.socket.settimeout(0)
+
+                    # Notificamos a la GUI de que tenemos un nuevo frame
+                    self.gui.codigoControlRecibido(recibido)
+                except socket.timeout:
+                    print('Timeout en la conexión de control')
+                    continue
+
+            else:
+                time.sleep(generales.sleep_bucle)

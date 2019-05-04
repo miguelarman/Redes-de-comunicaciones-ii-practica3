@@ -43,4 +43,4 @@ class PuertoUDPSaliente:
                 self.socket.sendto(data, (self.ip_destino, self.puerto_UDP_destino))
                 continue
 
-            time.sleep(generales.sleep_bucle)
+            time.sleep(generales.sleep_bucle_udp)
