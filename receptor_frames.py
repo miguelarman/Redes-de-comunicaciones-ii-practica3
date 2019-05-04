@@ -42,7 +42,7 @@ class ReceptorFrames:
 
             try:
                 self.socket.settimeout(generales.timeout_udp)
-                recibido, adress = self.socket.recvfrom(4096)
+                recibido, adress = self.socket.recvfrom(generales.socket_bufsize)
                 self.socket.settimeout(0)
 
                 # Notificamos a la GUI de que tenemos un nuevo frame

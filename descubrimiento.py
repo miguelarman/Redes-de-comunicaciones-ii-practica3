@@ -1,4 +1,5 @@
 import socket
+import generales
 
 class DS_connection:
     def __init__(self, ip, port):
@@ -18,7 +19,7 @@ class DS_connection:
     def register(self, nick, ip, port, password, protocol):
         command = 'REGISTER ' + nick + ' ' + ip + ' ' + str(port) + ' ' + password + ' ' + protocol
         self.socket.sendall(command.encode())
-        data = self.socket.recv(4096).decode()
+        data = self.socket.recv(generales.socket_bufsize).decode()
 
         if (data[0:2] != 'OK'):
             return data
@@ -28,7 +29,7 @@ class DS_connection:
     def list_users(self):
         command = 'LIST_USERS'
         self.socket.sendall(command.encode())
-        data = self.socket.recv(4096).decode()
+        data = self.socket.recv(generales.socket_bufsize).decode()
 
         ret = data.split(' ')
         if (ret[0] != 'OK'):
@@ -61,7 +62,7 @@ class DS_connection:
     def query(self, nick):
         command = 'QUERY ' + nick
         self.socket.sendall(command.encode())
-        data = self.socket.recv(4096).decode()
+        data = self.socket.recv(generales.socket_bufsize).decode()
 
         if (data[0:2] != 'OK'):
             print('Error con la peticion')
@@ -85,7 +86,7 @@ class DS_connection:
         try:
             command = 'QUIT'
             self.socket.sendall(command.encode())
-            data = self.socket.recv(4096).decode()
+            data = self.socket.recv(generales.socket_bufsize).decode()
             self.socket.close()
 
             return data

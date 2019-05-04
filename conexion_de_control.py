@@ -44,7 +44,7 @@ class ConexionDeControl:
         self.socket.close()
 
     def mandaPuertoUDP(self):
-        recibido = conn.recv(4096).decode()
+        recibido = conn.recv(generales.socket_bufsize).decode()
         print('Recibido en el handshake: {}'.format(recibido))
 
     def terminaConexion(self):
@@ -65,7 +65,7 @@ class ConexionDeControl:
 
         try:
             self.socket.settimeout(generales.timeout_handshake)
-            recibido = self.socket.recv(4096).decode()
+            recibido = self.socket.recv(generales.socket_bufsize).decode()
             self.socket.settimeout(None)
         except socket.timeout:
             print('Timeout en el handsake')
@@ -94,7 +94,7 @@ class ConexionDeControl:
 
                 try:
                     self.socket.settimeout(generales.timeout)
-                    recibido, adress = self.socket.recv(4096)
+                    recibido, adress = self.socket.recv(generales.socket_bufsize)
                     self.socket.settimeout(0)
 
                     # Notificamos a la GUI de que tenemos un nuevo frame

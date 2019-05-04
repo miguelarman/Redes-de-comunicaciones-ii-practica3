@@ -7,3 +7,4 @@ sleep_bucle = 10
 sleep_bucle_udp = 1
 timeout_udp = 1
 sleep_creacion = 1
+socket_bufsize = 1048576
