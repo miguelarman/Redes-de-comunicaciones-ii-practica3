@@ -94,7 +94,7 @@ class ConexionDeControl:
 
                 try:
                     self.socket.settimeout(generales.timeout)
-                    recibido, adress = self.socket.recv(generales.socket_bufsize)
+                    recibido = self.socket.recv(generales.socket_bufsize)
                     self.socket.settimeout(0)
 
                     # Notificamos a la GUI de que tenemos un nuevo frame
