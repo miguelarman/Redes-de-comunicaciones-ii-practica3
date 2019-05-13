@@ -124,13 +124,13 @@ class Interfaz():
                 result, encimg = cv2.imencode('.jpg', frame, encode_param)
                 if result == False:
                     print('Error al codificar imagen')
-                encimg = encimg.tobytes()
+                    encimg = encimg.tobytes()
 
                 width = self.cap.get(3)
                 height = self.cap.get(4)
                 fps = self.cap.get(cv2.CAP_PROP_FPS)
 
-                datos = Cabecera.poner(width, height, fps, encimg)
+                # datos = Cabecera.poner(width, height, fps, encimg)
 
                 try:
                     App.enviar(datos)
@@ -142,12 +142,14 @@ class Interfaz():
             try:
                 datos = App.out_buf.get_nowait()
 
-                dicc = Cabecera.quitar(datos)
+                # dicc = Cabecera.quitar(datos)
+                print('Cabecera quitada')
 
                 res = dicc['res']
                 width, height = res.split('x')
                 fps = dicc['fps']
-                encimg = dicc['datos']
+                # encimg = dicc['datos']
+                encimg = datos
 
 
                 # Descompresión de los datos, una vez recibidos

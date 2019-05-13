@@ -73,6 +73,7 @@ class Cabecera:
         """
         # foo = parse('{}#{}#{}#{}#{}', msg.decode())
         foo = msg.decode().split('#')
+        print('Parseado')
         return {
             'ord' : foo[0],
             'ts' : foo[1],
