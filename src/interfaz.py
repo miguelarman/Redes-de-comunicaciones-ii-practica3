@@ -135,7 +135,6 @@ class Interfaz():
 
                 try:
                     App.enviar(datos)
-                    # App.enviar(encimg)
                 except queue.Full:
                     print('Cola de envío llena')
 
@@ -143,27 +142,26 @@ class Interfaz():
         if App.on_call:
             datos = App.recibir()
 
-            dicc = Cabecera.quitar(datos)
-            print('Cabecera quitada')
+            if datos:
+                dicc = Cabecera.quitar(datos)
 
-            res = dicc['res']
-            width, height = res.split('x')
-            fps = dicc['fps']
-            encimg = dicc['datos']
-            # encimg = datos
+                res = dicc['res']
+                width, height = res.split('x')
+                fps = dicc['fps']
+                encimg = dicc['datos']
 
 
-            # Descompresión de los datos, una vez recibidos
-            decimg = cv2.imdecode(np.frombuffer(encimg,np.uint8), 1)
+                # Descompresión de los datos, una vez recibidos
+                decimg = cv2.imdecode(np.frombuffer(encimg,np.uint8), 1)
 
-            # Conversión de formato para su uso en el GUI
-            cv2_im = cv2.cvtColor(decimg,cv2.COLOR_BGR2RGB)
-            img_tk = ImageTk.PhotoImage(Image.fromarray(cv2_im))
+                # Conversión de formato para su uso en el GUI
+                cv2_im = cv2.cvtColor(decimg,cv2.COLOR_BGR2RGB)
+                img_tk = ImageTk.PhotoImage(Image.fromarray(cv2_im))
 
-            self.app.setImageData("video_recibido", img_tk, fmt = 'PhotoImage')
-            self.app.setImageSize('video_recibido', width, height)
+                self.app.setImageData("video_recibido", img_tk, fmt = 'PhotoImage')
+                self.app.setImageSize('video_recibido', width, height)
 
-            self.app.setStatusbar("FPS: {}".format(fps), 0)
+                self.app.setStatusbar("FPS: {}".format(fps), 0)
 
 
     def compruebaVentanas(self):

@@ -2,6 +2,13 @@ import time
 # from parse import parse
 
 class Cabecera:
+
+    ord_len = 5
+    frames_len = 3
+    ts_len = 10
+    size_len = 7
+
+
     """
         Esta clase permite poner y quitar
         las cabeceras para el control de
@@ -51,7 +58,7 @@ class Cabecera:
         # timestamp
         ts = int(time.time())
 
-        header = "{}#{}#{}x{}#{}#".format(ord, ts, ancho, alto, fps).encode("ascii")
+        header = "{:05d}#{:010d}#{:03d}x{:03d}#{:03d}#".format(int(ord), int(ts), int(ancho), int(alto), int(fps)).encode()
 
         return header + datos
 
@@ -71,14 +78,16 @@ class Cabecera:
             Diccionario con la informacion de la cabecera y los datos
 
         """
-        # foo = parse('{}#{}#{}#{}#{}', msg.decode())
-        msg = msg.decode('ascii')
-        foo = msg.split('#')
-        print('Parseado')
+
+        x = Cabecera.ord_len + 1 + Cabecera.frames_len + 1 + Cabecera.ts_len + 1 + Cabecera.size_len + 1
+        cabecera = msg[:x].decode()
+        framecod = msg[x:]
+
+        orden, ts, size, fps, _ = cabecera.split('#')
+
         return {
-            'ord' : foo[0],
-            'ts' : foo[1],
-            'res' : foo[2],
-            'fps' : foo[3],
-            'datos' : '#'.join(foo[4:]).encode()
+        'orden' : orden,
+        'fps' : fps,
+        'res' : size,
+        'datos' : framecod
         }
