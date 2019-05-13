@@ -42,16 +42,16 @@ class ConexionControl:
                 foo = data.decode().split(' ')
                 if foo[0] == 'CALL_HOLD':
                     print("Código de pausa recibido")
-                    aplicacion.App.nos_pausan()
+                    src.aplicacion.App.nos_pausan()
                 elif foo[0] == 'CALL_RESUME':
                     print("Código de reanudación recibido")
-                    aplicacion.App.nos_reanudan()
+                    src.aplicacion.App.nos_reanudan()
                 elif foo[0] == 'CALL_END':
                     print("Código de finalización recibido")
-                    aplicacion.App.nos_cuelgan()
+                    src.aplicacion.App.nos_cuelgan()
                 else:
                     print("Código erróneo recibido, finalizamos")
-                    aplicacion.App.nos_cuelgan()
+                    src.aplicacion.App.nos_cuelgan()
             except socket.timeout:
                 time.sleep(CONTROL_SLEEP)
             except socket.error:
@@ -59,14 +59,14 @@ class ConexionControl:
         print('soy uno de los thds de conn y estoy saliendo')
 
     def pausar(self):
-        cmd = 'CALL_HOLD {}'.format(aplicacion.App.nick)
+        cmd = 'CALL_HOLD {}'.format(src.aplicacion.App.nick)
         self.conn.sendall(cmd.encode())
 
 
     def reanudar(self):
-        cmd = 'CALL_RESUME {}'.format(aplicacion.App.nick)
+        cmd = 'CALL_RESUME {}'.format(src.aplicacion.App.nick)
         self.conn.sendall(cmd.encode())
 
     def colgar(self):
-        cmd = 'CALL_END {}'.format(aplicacion.App.nick)
+        cmd = 'CALL_END {}'.format(src.aplicacion.App.nick)
         self.conn.sendall(cmd.encode())

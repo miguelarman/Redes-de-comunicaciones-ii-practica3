@@ -1,6 +1,6 @@
 import threading
 import collections
-import random
+import queue
 
 from src.modulo_tcp import ModuloTCP
 from src.conexion_ds import ConexionDS
@@ -26,8 +26,8 @@ class App:
     tcp = None
     control_conn = None
 
-    in_buf = collections.deque()
-    out_buf = collections.deque()
+    in_buf = queue.Queue()
+    out_buf = queue.Queue()
 
     def login(nick, ip, port, pwd, proto):
         # hacemos uso del servidor de descubrimiento
