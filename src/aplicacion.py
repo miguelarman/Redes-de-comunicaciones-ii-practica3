@@ -110,7 +110,6 @@ class App:
 
     def nos_reanudan():
         if App.on_call:
-            App.
             App.on_hold = False
             return True
 
