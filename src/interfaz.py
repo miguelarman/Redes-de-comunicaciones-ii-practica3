@@ -28,6 +28,7 @@ class Interfaz():
         self.app.setPollTime(20)
         self.app.registerEvent(self.capturaFrame)
         self.app.registerEvent(self.muestraFrame)
+        self.app.registerEvent(self.compruebaVentanas)
 
         # Añadir los botones
         self.app.addButtons(["Lista de usuarios", 'Llamar', 'Pausar', 'Reanudar',"Colgar", "Salir"], self.buttonsCallback)
@@ -134,17 +135,23 @@ class Interfaz():
         if App.on_call:
             try:
                 encimg = App.out_buf.get_nowait()
+
+                # Descompresión de los datos, una vez recibidos
+                decimg = cv2.imdecode(np.frombuffer(encimg,np.uint8), 1)
+
+                # Conversión de formato para su uso en el GUI
+                cv2_im = cv2.cvtColor(decimg,cv2.COLOR_BGR2RGB)
+                img_tk = ImageTk.PhotoImage(Image.fromarray(cv2_im))
+
+                self.app.setImageData("video_recibido", img_tk, fmt = 'PhotoImage')
             except:
                 print('Error al recibir frame')
 
-            # Descompresión de los datos, una vez recibidos
-            decimg = cv2.imdecode(np.frombuffer(encimg,np.uint8), 1)
-
-            # Conversión de formato para su uso en el GUI
-            cv2_im = cv2.cvtColor(decimg,cv2.COLOR_BGR2RGB)
-            img_tk = ImageTk.PhotoImage(Image.fromarray(cv2_im))
-
-            self.app.setImageData("video_recibido", img_tk, fmt = 'PhotoImage')
+    def compruebaVentanas(self):
+        if App.on_call:
+            self.app.showSubWindow('Llamada')
+        else:
+            self.app.hideSubWindow('Llamada')
 
 
     #################################################
@@ -156,7 +163,7 @@ class Interfaz():
             App.stop()
             self.app.stop()
         elif button == 'Lista de usuarios':
-            return
+            print('No implementado todavía')
         elif button == 'Llamar':
             try:
                 self.app.startSubWindow("Nick_llamada", modal=True)
@@ -169,11 +176,12 @@ class Interfaz():
                 print('Ventana para preguntar nick ya creada')
             self.app.showSubWindow('Nick_llamada')
         elif button == 'Pausar':
-            return
+            App.pausar()
         elif button == 'Reanudar':
-            return
+            App.reanudar()
         elif button == "Colgar":
-            return
+            App.colgar()
+            self.app.hideSubWindow('Llamada')
         else:
             print('Botón no definido ({})'.format(button))
 
@@ -210,17 +218,31 @@ class Interfaz():
         else:
             nick = self.app.getEntry('nick_entry')
             print('Llamar a {}'.format(nick))
+            self.app.hideSubWindow('Nick_llamada')
             foo = App.llamar(nick)
             if foo == None:
                 self.app.errorBox('sdfsdf', 'No se ha podido conectar con {}'.format(nick))
             else:
-                self.app.hideSubWindow('Nick_llamada')
                 self.app.showSubWindow('Llamada')
+                self.app.setLabel('label_video','Video de {}'.format(nick))
 
 
+    #################################################
+    # Notificaciones
+    #################################################
     def notifyCall(self, nick):
         ret = self.app.okBox('Llamada entrante', 'Llamada entrante de: {}'.format(nick))
-        return ret
+
+        if ret == False:
+            return False
+
+        self.app.showSubWindow('Llamada')
+        self.app.setLabel('label_video','Video de {}'.format(nick))
+
+        return True
+
+    def meCuelgan(self):
+        self.app.hideSubWindow('Llamada')
 
 
     def stopExecution(self):
