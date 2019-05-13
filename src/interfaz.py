@@ -124,11 +124,11 @@ class Interfaz():
                 result, encimg = cv2.imencode('.jpg', frame, encode_param)
                 if result == False:
                     print('Error al codificar imagen')
-                    encimg = encimg.tobytes()
+                encimg = encimg.tobytes()
 
                 width = self.cap.get(3)
                 height = self.cap.get(4)
-                fps = self.cap.get(7)
+                fps = self.cap.get(cv2.CV_CAP_PROP_FPS)
 
                 datos = Cabecera.poner(width, height, fps, encimg)
 
