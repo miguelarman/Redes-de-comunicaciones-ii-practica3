@@ -100,7 +100,29 @@ class Interfaz():
     def buttonsCallback(self, button):
         if button == "Salir":
             # Salimos de la aplicación
+            App.stop()
             self.app.stop()
+        elif button == 'Lista de usuarios':
+            return
+        elif button == 'Llamar':
+            try:
+                self.app.startSubWindow("Nick_llamada", modal=True)
+                self.app.addLabel("l2", "Introduce el nick del usuario a llamar")
+                self.app.addEntry('nick_entry')
+                self.app.addButtons(["Call", "Cancel"], self.botones_llamar, colspan=2)
+                self.app.setFocus("nick_entry")
+                self.app.stopSubWindow()
+            except:
+                print('Ventana para preguntar nick ya creada')
+            self.app.showSubWindow('Nick_llamada')
+        elif button == 'Pausar':
+            return
+        elif button == 'Reanudar':
+            return
+        elif button == "Colgar":
+            return
+        else:
+            print('Botón no definido ({})'.format(button))
 
     # Callback de los botones de login
     def botones_login(self, button):
@@ -118,7 +140,6 @@ class Interfaz():
             print('Dirección IP: {}. Puerto: {}. Protocolo: {}'.format(self.login_ip, self.login_puerto, self.protocolo))
 
             foo = App.login(self.nick, self.login_ip, self.login_puerto, self.password, self.protocolo)
-            # foo = True
 
             if foo == True:
                 print('Login correcto')
@@ -129,6 +150,19 @@ class Interfaz():
                 print('Login incorrecto')
                 self.app.errorBox("Login incorrecto", "Datos inválidos. Prueba de nuevo")
                 return
+
+    # Callback de los botones de llamar
+    def botones_llamar(self, button):
+        if button == 'Cancel':
+            self.app.hideSubWindow('Nick_llamada')
+        else:
+            nick = self.app.getEntry('nick_entry')
+            print('Llamar a {}'.format(nick))
+            foo = App.llamar(nick)
+            if foo == None:
+                self.app.errorBox('sdfsdf', 'No se ha podido conectar con {}'.format(nick))
+            self.app.hideSubWindow('Nick_llamada')
+
 
     def stopExecution(self):
         print('Saliendo')
