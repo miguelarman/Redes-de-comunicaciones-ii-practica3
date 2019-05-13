@@ -107,7 +107,7 @@ class Interfaz():
             self.app.stop()
 
     # Callback de los botones de login
-    def botones_login(self, boton):
+    def botones_login(self, button):
         if button == 'Cancelar':
             # self.app.hideSubWindow('Login')
             self.app.stop()
@@ -118,16 +118,17 @@ class Interfaz():
             self.login_ip = self.app.getEntry("ipEnt")
             self.login_puerto = int(self.app.getEntry("puertoEnt"))
             self.protocolo = self.app.getEntry("protEnt")
-            print('Usuario: {}. Contraseña: {}'.format(self.usuario, self.password))
+            print('Usuario: {}. Contraseña: {}'.format(self.nick, self.password))
             print('Dirección IP: {}. Puerto: {}. Protocolo: {}'.format(self.login_ip, self.login_puerto, self.protocolo))
 
-            foo = App.login(self.nick, self.login_ip, self.login_puerto, self.password, self.protocolo)
+            # foo = App.login(self.nick, self.login_ip, self.login_puerto, self.password, self.protocolo)
+            foo = True
 
             if foo == True:
                 print('Login correcto')
                 self.app.hideSubWindow('Login')
                 self.app.show()
-                self.logged = True
+                # self.logged = True
             else:
                 print('Login incorrecto')
                 self.app.errorBox("Login incorrecto", "Datos inválidos. Prueba de nuevo")
