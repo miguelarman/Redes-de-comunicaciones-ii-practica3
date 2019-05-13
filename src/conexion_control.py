@@ -31,7 +31,7 @@ class ConexionControl:
         self.conn.shutdown(socket.SHUT_RDWR)
         self.conn.close()
         self.udp.stop()
-        self.control_thd.join()
+        # self.control_thd.join()
 
     def __controlando(self):
         self.conn.settimeout(CONTROL_TIMEOUT)

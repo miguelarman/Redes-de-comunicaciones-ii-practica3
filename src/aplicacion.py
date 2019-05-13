@@ -122,7 +122,7 @@ class App:
         if App.logged:
             if App.on_call:
                 App.colgar()
-            App.tcp.shutdown()
+            App.tcp.stop()
             return
         else:
             return
