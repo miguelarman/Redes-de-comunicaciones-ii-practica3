@@ -98,6 +98,17 @@ class App:
             ds.quit()
             return foo
 
+    def __vaciar_cola(cola):
+        while not cola.empty():
+            try:
+                cola.get_nowait()
+            except cola.Empty:
+                return
+
+    def vaciar_bufs():
+        App.__vaciar_cola(App.in_buf)
+        App.__vaciar_cola(App.out_buf)
+
     def responder(nick):
         Cabecera.resetCounter()
         return App.gui.notifyCall(nick)
@@ -106,22 +117,26 @@ class App:
         if App.on_call:
             App.control_conn.pausar()
             App.on_hold = True
+            App.vaciar_bufs()
             return True
 
     def nos_pausan():
         if App.on_call and not App.on_hold:
             App.on_hold = True
+            App.vaciar_bufs()
             return True
 
 
     def reanudar():
         if App.on_call and App.on_hold:
+            App.vaciar_bufs()
             App.control_conn.reanudar()
             App.on_hold = False
             return True
 
     def nos_reanudan():
         if App.on_call and App.on_hold:
+            App.vaciar_bufs()
             App.on_hold = False
             return True
 
@@ -131,6 +146,7 @@ class App:
             App.control_conn.stop()
             App.on_hold = False
             App.on_call = False
+            App.vaciar_bufs()
             return True
 
     def nos_cuelgan():
@@ -138,6 +154,7 @@ class App:
             App.control_conn.stop()
             App.on_hold = False
             App.on_call = False
+            App.vaciar_bufs()
 
     def stop():
         if App.logged:
