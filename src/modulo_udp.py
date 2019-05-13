@@ -51,7 +51,6 @@ class ModuloUDP:
                 if not src.aplicacion.App.on_hold:
                     data, addr = self.sock.recvfrom(BUFSIZE)
                     src.aplicacion.App.out_buf.put_nowait(data)
-                    print(data)
                 else:
                     time.sleep(UDP_SLEEP)
             except queue.Full:

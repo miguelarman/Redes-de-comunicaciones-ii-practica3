@@ -74,12 +74,7 @@ class App:
                     return True
 
     def responder(nick):
-        print('Responde y para aceptar y cualquier otra cosa para denegar')
-        ans = input('Llamada recibida de {}'.format(nick))
-        if ans == 'y':
-            return True
-        else:
-            return False
+        return App.gui.notifyCall(nick)
 
     def pausar():
         if App.on_call:
