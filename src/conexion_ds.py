@@ -1,7 +1,19 @@
+"""
+    Prácticas de Redes de comunicaciones 2
+
+    Autores:
+        Miguel Arconada Manteca
+        Mario García Pascual
+"""
+
 import socket
 
 from src.generales import *
 
+"""
+Clase para hacer peticiones al servidor de descubrimiento.
+
+"""
 class ConexionDS:
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

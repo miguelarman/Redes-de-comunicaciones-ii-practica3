@@ -1,3 +1,11 @@
+"""
+    Prácticas de Redes de comunicaciones 2
+
+    Autores:
+        Miguel Arconada Manteca
+        Mario García Pascual
+"""
+
 import socket
 import threading
 import time
@@ -6,6 +14,10 @@ import queue
 from src.generales import *
 import src.aplicacion
 
+"""
+Clase del módulo UDP
+
+"""
 class ModuloUDP:
     def __init__(self):
         # Bandera de control del modulo UDP

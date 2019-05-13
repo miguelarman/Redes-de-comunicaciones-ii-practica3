@@ -1,6 +1,17 @@
-import time
-# from parse import parse
+"""
+    Prácticas de Redes de comunicaciones 2
 
+    Autores:
+        Miguel Arconada Manteca
+        Mario García Pascual
+"""
+
+import time
+
+"""
+Clase para manejo de cabeceras
+
+"""
 class Cabecera:
 
     ord_len = 5

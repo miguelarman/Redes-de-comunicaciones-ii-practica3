@@ -1,3 +1,11 @@
+"""
+    Prácticas de Redes de comunicaciones 2
+
+    Autores:
+        Miguel Arconada Manteca
+        Mario García Pascual
+"""
+
 import socket
 import threading
 import time
@@ -6,7 +14,10 @@ from src.generales import *
 from src.conexion_control import ConexionControl
 import src.aplicacion
 
+"""
+Clase del módulo TCP.
 
+"""
 class ModuloTCP:
     def __init__(self):
         # Socket del modulo TCP

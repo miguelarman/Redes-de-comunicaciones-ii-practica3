@@ -1,3 +1,11 @@
+"""
+    Prácticas de Redes de comunicaciones 2
+
+    Autores:
+        Miguel Arconada Manteca
+        Mario García Pascual
+"""
+
 import threading
 import time
 import socket
@@ -6,6 +14,12 @@ from src.generales import *
 from src.modulo_udp import ModuloUDP
 import src.aplicacion
 
+"""
+Esta es la clase de la conexión de control
+
+Args:
+    conn: Esta es la conexión que tiene que "controlar" mediante TCP
+"""
 class ConexionControl:
     def __init__(self, conn):
         # Socket de la conexion de control
