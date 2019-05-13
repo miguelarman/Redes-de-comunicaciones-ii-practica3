@@ -34,6 +34,7 @@ class App:
         # hacemos uso del servidor de descubrimiento
         ds = ConexionDS()
         foo = ds.register(nick, ip, port, pwd, proto)
+        ds.quit()
         if not foo:
             print("login fallido")
         else:
@@ -62,6 +63,7 @@ class App:
         if App.logged:
             ds = ConexionDS()
             foo = ds.query(nick)
+            ds.quit()
             if not foo:
                 print("nick no encontrado")
             else:
@@ -87,6 +89,13 @@ class App:
             except:
                 return
 
+    def lista_de_usuarios():
+        if App.logged:
+            ds = ConexionDS()
+            foo = ds.list_users()
+            ds.quit()
+            return foo
+
     def responder(nick):
         return App.gui.notifyCall(nick)
 
@@ -97,19 +106,19 @@ class App:
             return True
 
     def nos_pausan():
-        if App.on_call:
+        if App.on_call and not App.on_hold:
             App.on_hold = True
             return True
 
 
     def reanudar():
-        if App.on_call:
+        if App.on_call and App.on_hold:
             App.control_conn.reanudar()
             App.on_hold = False
             return True
 
     def nos_reanudan():
-        if App.on_call:
+        if App.on_call and App.on_hold:
             App.on_hold = False
             return True
 
