@@ -38,7 +38,7 @@ class ModuloTCP:
                 self.responder(conn, her_addr)
             except socket.timeout:
                 time.sleep(LISTEN_SLEEP)
-            except socket.error:
+            except:
                 raise
 
     def responder(self, conn, her_addr):
@@ -111,7 +111,7 @@ class ModuloTCP:
                 src.aplicacion.App.on_call = False
                 src.aplicacion.App.on_call_lock.release()
                 return
-            except socket.error:
+            except:
                 src.aplicacion.App.on_call_lock.acquire()
                 src.aplicacion.App.on_call = False
                 src.aplicacion.App.on_call_lock.release()
@@ -129,7 +129,10 @@ class ModuloTCP:
                 src.aplicacion.App.on_call = False
                 src.aplicacion.App.on_call_lock.release()
                 return
-            except socket.error:
+            except:
+                src.aplicacion.App.on_call_lock.acquire()
+                src.aplicacion.App.on_call = False
+                src.aplicacion.App.on_call_lock.release()
                 raise
 
             foo = data.decode().split(' ')
