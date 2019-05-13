@@ -1,11 +1,12 @@
 import threading
 import collections
 import queue
-import random
 
 from src.modulo_tcp import ModuloTCP
 from src.conexion_ds import ConexionDS
 from src.generales import *
+from src.utiles_sockets import *
+from src.cabecera import Cabecera
 
 class App:
     nick = None
@@ -28,7 +29,7 @@ class App:
     control_conn = None
 
     in_buf = queue.Queue()
-    out_buf = queue.Queue()
+    out_buf = queue.PriorityQueue()
 
     def login(nick, ip, port, pwd, proto):
         # hacemos uso del servidor de descubrimiento
@@ -43,7 +44,7 @@ class App:
             App.nick = nick
             App.ip = ip
             App.my_tcp_port = port
-            App.my_udp_port = random.randint(1000, 60000)
+            App.my_udp_port = getPuertoLibre()
             App.protocol = proto
 
             App.my_tcp_addr = (App.ip, int(App.my_tcp_port))
@@ -72,6 +73,7 @@ class App:
                 if not ret:
                     print("no se ha podido establecer llamada")
                 else:
+                    Cabecera.resetCounter()
                     print("en llamada")
                     return True
 
@@ -85,7 +87,7 @@ class App:
     def recibir():
         if App.on_call and not App.on_hold:
             try:
-                return App.out_buf.get_nowait()
+                return App.out_buf.get_nowait()[1]
             except:
                 return
 
@@ -97,6 +99,7 @@ class App:
             return foo
 
     def responder(nick):
+        Cabecera.resetCounter()
         return App.gui.notifyCall(nick)
 
     def pausar():
