@@ -5,7 +5,7 @@ import cv2
 import time
 import sys
 
-import src.utiles_sockets
+import src.utiles_sockets as utiles
 # from src.conexion_ds import ConexionDS
 from src.aplicacion import App
 
@@ -60,18 +60,14 @@ class Interfaz():
         self.app.addEntry('protEnt', 4, 1)
 
         # Prefijar valores de ip, puerto y protocolo
-        try:
-            ip_privada = utiles_sockets.getIPPrivada()
-            print('IP privada: {}'.format(ip_privada))
-            puerto_disponible = utiles_sockets.getPuertoLibre()
-            print('Puerto disponible: {}'.format(puerto_disponible))
-            self.app.setEntry('ipEnt', ip_privada)
-            self.app.setEntry('puertoEnt', puerto_disponible)
-            self.app.setEntry('protEnt', 'V1')
-        except: # No se puede calcular la IP y el puerto
-            self.app.setEntry('ipEnt', '127.0.0.1')
-            self.app.setEntry('puertoEnt', 9999)
-            self.app.setEntry('protEnt', 'V1')
+        ip_privada = utiles.getIPPrivada()
+        print('IP privada: {}'.format(ip_privada))
+        puerto_disponible = utiles.getPuertoLibre()
+        print('Puerto disponible: {}'.format(puerto_disponible))
+        self.app.setEntry('ipEnt', ip_privada)
+        self.app.setEntry('puertoEnt', puerto_disponible)
+        self.app.setEntry('protEnt', 'V1')
+
 
         self.app.addButtons(["Aceptar", "Cancelar"], self.botones_login, colspan=2)
         self.app.setFocus("usuarioEnt")
@@ -121,8 +117,8 @@ class Interfaz():
             print('Usuario: {}. Contraseña: {}'.format(self.nick, self.password))
             print('Dirección IP: {}. Puerto: {}. Protocolo: {}'.format(self.login_ip, self.login_puerto, self.protocolo))
 
-            # foo = App.login(self.nick, self.login_ip, self.login_puerto, self.password, self.protocolo)
-            foo = True
+            foo = App.login(self.nick, self.login_ip, self.login_puerto, self.password, self.protocolo)
+            # foo = True
 
             if foo == True:
                 print('Login correcto')

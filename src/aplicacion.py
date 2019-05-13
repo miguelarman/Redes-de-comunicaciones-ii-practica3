@@ -1,6 +1,7 @@
 import threading
 import collections
 import queue
+import random
 
 from src.modulo_tcp import ModuloTCP
 from src.conexion_ds import ConexionDS
