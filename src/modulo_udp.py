@@ -12,7 +12,7 @@ class ModuloUDP:
 
         # Abrimos nuestro socket
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sock.bind(aplicacion.App.my_udp_addr)
+        self.sock.bind(src.aplicacion.App.my_udp_addr)
 
         # Creamos los hilos
         self.send_thd = threading.Thread(target=self.__enviando)
@@ -32,9 +32,9 @@ class ModuloUDP:
     def  __enviando(self):
         while not self.shutdown:
             try:
-                if not aplicacion.App.on_hold:
-                    data = aplicacion.App.in_buf.get_nowait()
-                    self.sock.sendto(data, aplicacion.App.her_udp_addr)
+                if not src.aplicacion.App.on_hold:
+                    data = src.aplicacion.App.in_buf.get_nowait()
+                    self.sock.sendto(data, src.aplicacion.App.her_udp_addr)
                 else:
                     time.sleep(UDP_SLEEP)
             except queue.Empty:
@@ -47,9 +47,9 @@ class ModuloUDP:
         self.sock.settimeout(UDP_SLEEP)
         while not self.shutdown:
             try:
-                if not aplicacion.App.on_hold:
-                    data, addr = self.sock.(BUFSIZE)
-                    aplicacion.App.out_buf.put_nowait(data)
+                if not src.aplicacion.App.on_hold:
+                    data, addr = self.sock.recvfrom(BUFSIZE)
+                    src.aplicacion.App.out_buf.put_nowait(data)
                     print(data)
                 else:
                     time.sleep(UDP_SLEEP)
