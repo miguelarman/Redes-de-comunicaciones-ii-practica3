@@ -11,7 +11,7 @@ from src.aplicacion import App
 from src.cabecera import Cabecera
 
 class Interfaz():
-    def __init__(self, window_size):
+    def __init__(self, window_size, video=0):
         self.llamada_entrante = None
 
         # Creamos una variable que contenga el GUI principal
@@ -24,7 +24,7 @@ class Interfaz():
         self.app.addImage('video_enviado', "imgs/webcam.gif")
 
         # Registramos funcioones
-        self.cap = cv2.VideoCapture(0)
+        self.cap = cv2.VideoCapture(video)
         self.app.setPollTime(20)
         self.app.registerEvent(self.capturaFrame)
         self.app.registerEvent(self.muestraFrame)
@@ -124,7 +124,8 @@ class Interfaz():
                 result, encimg = cv2.imencode('.jpg', frame, encode_param)
                 if result == False:
                     print('Error al codificar imagen')
-                    encimg = encimg.tobytes()
+
+                encimg = encimg.tobytes()
 
                 width = self.cap.get(3)
                 height = self.cap.get(4)
@@ -140,33 +141,30 @@ class Interfaz():
 
     def muestraFrame(self):
         if App.on_call:
-            try:
-                datos = App.recibir()
+            datos = App.recibir()
 
-                dicc = Cabecera.quitar(datos)
-                print('Cabecera quitada')
+            dicc = Cabecera.quitar(datos)
+            print('Cabecera quitada')
 
-                res = dicc['res']
-                width, height = res.split('x')
-                fps = dicc['fps']
-                encimg = dicc['datos']
-                # encimg = datos
+            res = dicc['res']
+            width, height = res.split('x')
+            fps = dicc['fps']
+            encimg = dicc['datos']
+            # encimg = datos
 
 
-                # Descompresión de los datos, una vez recibidos
-                decimg = cv2.imdecode(np.frombuffer(encimg,np.uint8), 1)
+            # Descompresión de los datos, una vez recibidos
+            decimg = cv2.imdecode(np.frombuffer(encimg,np.uint8), 1)
 
-                # Conversión de formato para su uso en el GUI
-                cv2_im = cv2.cvtColor(decimg,cv2.COLOR_BGR2RGB)
-                img_tk = ImageTk.PhotoImage(Image.fromarray(cv2_im))
+            # Conversión de formato para su uso en el GUI
+            cv2_im = cv2.cvtColor(decimg,cv2.COLOR_BGR2RGB)
+            img_tk = ImageTk.PhotoImage(Image.fromarray(cv2_im))
 
-                self.app.setImageData("video_recibido", img_tk, fmt = 'PhotoImage')
-                self.app.setImageSize('video_recibido', width, height)
+            self.app.setImageData("video_recibido", img_tk, fmt = 'PhotoImage')
+            self.app.setImageSize('video_recibido', width, height)
 
-                self.app.setStatusbar("FPS: {}".format(fps), 0)
+            self.app.setStatusbar("FPS: {}".format(fps), 0)
 
-            except:
-                return
 
     def compruebaVentanas(self):
         if App.on_call:

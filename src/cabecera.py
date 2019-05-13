@@ -51,7 +51,7 @@ class Cabecera:
         # timestamp
         ts = int(time.time())
 
-        header = "{}#{}#{}x{}#{}#".format(ord, ts, ancho, alto, fps).encode()
+        header = "{}#{}#{}x{}#{}#".format(ord, ts, ancho, alto, fps).encode("ascii")
 
         return header + datos
 
@@ -72,7 +72,8 @@ class Cabecera:
 
         """
         # foo = parse('{}#{}#{}#{}#{}', msg.decode())
-        foo = msg.decode().split('#')
+        msg = msg.decode('ascii')
+        foo = msg.split('#')
         print('Parseado')
         return {
             'ord' : foo[0],
