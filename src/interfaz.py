@@ -128,7 +128,7 @@ class Interfaz():
 
                 width = self.cap.get(3)
                 height = self.cap.get(4)
-                fps = self.cap.get(cv2.CV_CAP_PROP_FPS)
+                fps = self.cap.get(cv2.CAP_PROP_FPS)
 
                 datos = Cabecera.poner(width, height, fps, encimg)
 
