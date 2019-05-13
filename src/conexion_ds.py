@@ -43,8 +43,6 @@ class ConexionDS:
         list = data[len('OK USERS_LIST ') + len(str(num)) + 1:]
         list = list.split('#')
 
-        print(list)
-
         array = []
         for entry in list:
             # if len(entry) < 4:
