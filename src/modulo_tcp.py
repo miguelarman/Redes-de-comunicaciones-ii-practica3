@@ -14,7 +14,10 @@ from src.generales import *
 from src.conexion_control import ConexionControl
 import src.aplicacion
 
+"""
+Clase del módulo TCP.
 
+"""
 class ModuloTCP:
     def __init__(self):
         # Socket del modulo TCP

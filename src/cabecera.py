@@ -7,8 +7,11 @@
 """
 
 import time
-# from parse import parse
 
+"""
+Clase para manejo de cabeceras
+
+"""
 class Cabecera:
 
     ord_len = 5

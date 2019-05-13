@@ -16,6 +16,10 @@ from src.generales import *
 from src.utiles_sockets import *
 from src.cabecera import Cabecera
 
+"""
+Esta es la clase princiapl de la aplicación. Singleton.
+
+"""
 class App:
     nick = None
     ip = None

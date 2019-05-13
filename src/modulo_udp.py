@@ -14,6 +14,10 @@ import queue
 from src.generales import *
 import src.aplicacion
 
+"""
+Clase del módulo UDP
+
+"""
 class ModuloUDP:
     def __init__(self):
         # Bandera de control del modulo UDP
