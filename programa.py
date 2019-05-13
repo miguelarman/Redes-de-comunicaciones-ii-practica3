@@ -2,5 +2,5 @@ from src.interfaz import Interfaz
 
 if __name__ == '__main__':
     gui = Interfaz("640x520")
-
-    gui.start()
+    App.gui = gui
+    App.gui.start()
