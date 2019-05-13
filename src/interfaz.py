@@ -12,6 +12,7 @@ from src.aplicacion import App
 
 class Interfaz():
     def __init__(self, window_size):
+        self.llamada_entrante = None
 
         # Creamos una variable que contenga el GUI principal
         self.app = gui('Redes2 - P2P', window_size)
@@ -144,13 +145,24 @@ class Interfaz():
 
                 self.app.setImageData("video_recibido", img_tk, fmt = 'PhotoImage')
             except:
-                print('Error al recibir frame')
+                return
 
     def compruebaVentanas(self):
         if App.on_call:
             self.app.showSubWindow('Llamada')
         else:
             self.app.hideSubWindow('Llamada')
+
+        if self.llamada_entrante:
+            ret = self.app.yesNoBox('Llamada entrante', 'Llamada entrante de: {}'.format(self.llamada_entrante))
+            print('ret: {}'.format(ret))
+            if ret == False:
+                return False
+
+            self.app.showSubWindow('Llamada')
+            self.app.setLabel('label_video','Video de {}'.format(self.llamada_entrante))
+
+            self.llamada_entrante = None
 
     #################################################
     # Callback de funciones
@@ -214,13 +226,7 @@ class Interfaz():
     # Notificaciones
     #################################################
     def notifyCall(self, nick):
-        ret = self.app.yesNoBox('Llamada entrante', 'Llamada entrante de: {}'.format(nick))
-        print('ret: {}'.format(ret))
-        if ret == False:
-            return False
-
-        self.app.showSubWindow('Llamada')
-        self.app.setLabel('label_video','Video de {}'.format(nick))
+        self.llamada_entrante = nick
 
         return True
 
