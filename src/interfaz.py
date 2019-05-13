@@ -7,7 +7,6 @@ import queue
 import sys
 
 import src.utiles_sockets as utiles
-# from src.conexion_ds import ConexionDS
 from src.aplicacion import App
 
 
@@ -153,7 +152,6 @@ class Interfaz():
         else:
             self.app.hideSubWindow('Llamada')
 
-
     #################################################
     # Callback de funciones
     #################################################
@@ -165,16 +163,15 @@ class Interfaz():
         elif button == 'Lista de usuarios':
             print('No implementado todavía')
         elif button == 'Llamar':
-            try:
-                self.app.startSubWindow("Nick_llamada", modal=True)
-                self.app.addLabel("l2", "Introduce el nick del usuario a llamar")
-                self.app.addEntry('nick_entry')
-                self.app.addButtons(["Call", "Cancel"], self.botones_llamar, colspan=2)
-                self.app.setFocus("nick_entry")
-                self.app.stopSubWindow()
-            except:
-                print('Ventana para preguntar nick ya creada')
-            self.app.showSubWindow('Nick_llamada')
+            nick = self.app.stringBox('pregunta_nick', 'Nick del usuario a llamar')
+            print('Llamar a {}'.format(nick))
+
+            foo = App.llamar(nick)
+            if foo == None:
+                self.app.errorBox('sdfsdf', 'No se ha podido conectar con {}'.format(nick))
+            else:
+                self.app.showSubWindow('Llamada')
+                self.app.setLabel('label_video','Video de {}'.format(nick))
         elif button == 'Pausar':
             App.pausar()
         elif button == 'Reanudar':
@@ -211,28 +208,14 @@ class Interfaz():
                 self.app.errorBox("Login incorrecto", "Datos inválidos. Prueba de nuevo")
                 return
 
-    # Callback de los botones de llamar
-    def botones_llamar(self, button):
-        if button == 'Cancel':
-            self.app.hideSubWindow('Nick_llamada')
-        else:
-            nick = self.app.getEntry('nick_entry')
-            print('Llamar a {}'.format(nick))
-            self.app.hideSubWindow('Nick_llamada')
-            foo = App.llamar(nick)
-            if foo == None:
-                self.app.errorBox('sdfsdf', 'No se ha podido conectar con {}'.format(nick))
-            else:
-                self.app.showSubWindow('Llamada')
-                self.app.setLabel('label_video','Video de {}'.format(nick))
 
 
     #################################################
     # Notificaciones
     #################################################
     def notifyCall(self, nick):
-        ret = self.app.okBox('Llamada entrante', 'Llamada entrante de: {}'.format(nick))
-
+        ret = self.app.yesNoBox('Llamada entrante', 'Llamada entrante de: {}'.format(nick))
+        print('ret: {}'.format(ret))
         if ret == False:
             return False
 
