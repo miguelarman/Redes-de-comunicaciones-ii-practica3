@@ -141,14 +141,14 @@ class Interfaz():
     def muestraFrame(self):
         if App.on_call:
             try:
-                datos = App.out_buf.get_nowait()
+                datos = App.out_buf.recibir()
 
                 # dicc = Cabecera.quitar(datos)
-                print('Cabecera quitada')
+                # print('Cabecera quitada')
 
-                res = dicc['res']
-                width, height = res.split('x')
-                fps = dicc['fps']
+                # res = dicc['res']
+                # width, height = res.split('x')
+                # fps = dicc['fps']
                 # encimg = dicc['datos']
                 encimg = datos
 
