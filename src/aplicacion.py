@@ -73,6 +73,20 @@ class App:
                     print("en llamada")
                     return True
 
+    def enviar(msg):
+        if App.on_call and not App.on_hold:
+            try:
+                App.in_buf.put_nowait(msg)
+            except queue.Full:
+                return
+
+    def recibir():
+        if App.on_call and not App.on_hold:
+            try:
+                return App.out_buf.get_nowait()
+            except:
+                return
+
     def responder(nick):
         return App.gui.notifyCall(nick)
 
@@ -96,6 +110,7 @@ class App:
 
     def nos_reanudan():
         if App.on_call:
+            App.
             App.on_hold = False
             return True
 
