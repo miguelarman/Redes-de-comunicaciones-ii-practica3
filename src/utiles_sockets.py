@@ -1,3 +1,17 @@
+"""
+    Prácticas de Redes de comunicaciones 2
+
+    Autores:
+        Miguel Arconada Manteca
+        Mario García Pascual
+
+    utiles_sockets:
+        En este fichero se implementan dos funciones útiles en lo relativo
+        a la gestión de sockets en el equipo:
+            - Obtener tu dirección IP privada
+            - Obtener un puerto libre
+"""
+
 import socket
 
 """

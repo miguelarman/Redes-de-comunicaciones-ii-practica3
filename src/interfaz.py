@@ -1,3 +1,18 @@
+"""
+    Prácticas de Redes de comunicaciones 2
+
+    Autores:
+        Miguel Arconada Manteca
+        Mario García Pascual
+
+    interfaz:
+        En este fichero se implementa todo lo relacionado con la interfaz de la
+        aplicación. Contiene dos funciones principales a las que se debería
+        llamar si se quiere hacer uso de este módulo:
+            - __init__(): Para crear un objeto de esta clase
+            - start(): Para dar el control a la aplicación y ejecutar las ventanas
+"""
+
 from appJar import gui, appjar
 from PIL import Image, ImageTk
 import numpy as np
