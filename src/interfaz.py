@@ -141,7 +141,7 @@ class Interfaz():
     def muestraFrame(self):
         if App.on_call:
             try:
-                datos = App.out_buf.recibir()
+                datos = App.recibir()
 
                 # dicc = Cabecera.quitar(datos)
                 # print('Cabecera quitada')
