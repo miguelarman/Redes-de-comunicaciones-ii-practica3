@@ -11,6 +11,16 @@ from src.aplicacion import App
 from src.cabecera import Cabecera
 
 class Interfaz():
+    """
+    Función constructora de la clase. Crea las ventanas necesarias
+
+    Args:
+        window_size: Tamaño de la ventana principal
+        video: (opcional) Video del que leer frames. Por defecto es la webcam
+
+    Returns:
+        Un objeto de la clase Interfaz
+    """
     def __init__(self, window_size, video=0):
         self.llamada_entrante = None
 
@@ -106,6 +116,10 @@ class Interfaz():
     #################################################
     # Funciones que se encargan del vídeo
     #################################################
+
+    """
+    Función periódica que captura un frame del vídeo y lo muestra por ventana
+    """
     def capturaFrame(self):
         if App.logged:
             # Capturamos un frame de la cámara o del vídeo
@@ -138,6 +152,9 @@ class Interfaz():
                 except queue.Full:
                     print('Cola de envío llena')
 
+    """
+    Función periódica que recibe un frame entrante y lo muestra por pantalla
+    """
     def muestraFrame(self):
         if App.on_call:
             datos = App.recibir()
@@ -164,6 +181,11 @@ class Interfaz():
                 self.app.setStatusbar("FPS: {}".format(fps), 0)
 
 
+    """
+    Función periódica que comprueba si las ventanas están
+    como deben estar abiertas o cerradas. Útil si la llamada
+    se corta por el otro extremo
+    """
     def compruebaVentanas(self):
         if App.on_call:
             self.app.showSubWindow('Llamada')
@@ -184,13 +206,39 @@ class Interfaz():
     #################################################
     # Callback de funciones
     #################################################
+
+    """
+    Callback para los botones del frame principal
+
+    Args:
+        button: Nombre del botón pulsado
+    """
     def buttonsCallback(self, button):
         if button == "Salir":
             # Salimos de la aplicación
             App.stop()
             self.app.stop()
         elif button == 'Lista de usuarios':
-            print('No implementado todavía')
+            self.lista = App.lista_de_usuarios()
+
+            try:
+                self.app.startSubWindow('Usuarios', modal=True)
+            except appjar.ItemLookupError:
+                print('Ventana \'Usuarios\' ya abierta')
+                self.app.showSubWindow('Usuarios')
+                return
+
+            self.app.setSize(550, 600)
+            self.app.addLabel("lx", 'Usuarios disponibles para llamar')
+            self.app.addTable('tabla_usuarios', [['Nombre', 'Dirección IP', 'Puerto']], action = self.selecciona_lista_usuarios)
+            print('Añadiendo filas')
+            self.app.addTableRows('tabla_usuarios', self.lista)
+            print('Añadidas filas')
+            self.app.setTableWidth('tabla_usuarios', 500)
+            self.app.setTableHeight('tabla_usuarios', 550)
+            self.app.stopSubWindow()
+            self.app.showSubWindow('Usuarios')
+
         elif button == 'Llamar':
             nick = self.app.stringBox('pregunta_nick', 'Nick del usuario a llamar')
             if nick:
@@ -212,7 +260,12 @@ class Interfaz():
         else:
             print('Botón no definido ({})'.format(button))
 
-    # Callback de los botones de login
+    """
+    Callback para los botones de la ventana de login
+
+    Args:
+        button: Nombre del botón pulsado
+    """
     def botones_login(self, button):
         if button == 'Cancelar':
             # self.app.hideSubWindow('Login')
@@ -238,20 +291,58 @@ class Interfaz():
                 self.app.errorBox("Login incorrecto", "Datos inválidos. Prueba de nuevo")
                 return
 
+    """
+    Callback para los botones de la tabla de usuarios
+
+    Args:
+        index: Índice de la fila pulsada
+    """
+    def selecciona_lista_usuarios(self, index):
+        if self.lista:
+            nick, ip, puerto = self.lista[index][:-1]
+            puerto = int(puerto)
+
+            ret = self.app.okBox('Usuario seleccionado', 'Ha seleccionado al usuario {} con direccion {}:{}'.format(nick, ip, puerto))
+
+            if ret == False:
+                return
+
+            foo = App.llamar(nick)
+
+            if foo == True:
+                self.app.hideSubWindow('Usuarios')
+
 
 
     #################################################
     # Notificaciones
     #################################################
+
+
+    """
+    Función que notifica al usuario de una llamada entrante
+
+    Args:
+        nick: Nick del usuario que llama
+
+    Returns:
+        True si se acepta la llamada
+    """
     def notifyCall(self, nick):
         self.llamada_entrante = nick
 
         return True
 
+    """
+    Función que se llama cuando el otro extremo termina la llamada
+    """
     def meCuelgan(self):
         self.app.hideSubWindow('Llamada')
 
 
+    """
+    Función que se llama al cerrar la aplicación
+    """
     def stopExecution(self):
         print('Saliendo')
         return True
