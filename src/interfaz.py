@@ -163,6 +163,10 @@ class Interfaz():
                 self.app.errorBox('sdfsdf', 'No se ha podido conectar con {}'.format(nick))
             self.app.hideSubWindow('Nick_llamada')
 
+    def notifyCall(self, nick):
+		ret = self.app.okBox('Llamada entrante', 'Llamada entrante de: {}'.format(nick))
+        return ret
+
 
     def stopExecution(self):
         print('Saliendo')
