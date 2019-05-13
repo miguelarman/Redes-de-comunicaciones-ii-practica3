@@ -130,11 +130,11 @@ class Interfaz():
                 height = self.cap.get(4)
                 fps = self.cap.get(cv2.CAP_PROP_FPS)
 
-                # datos = Cabecera.poner(width, height, fps, encimg)
+                datos = Cabecera.poner(width, height, fps, encimg)
 
                 try:
-                    # App.enviar(datos)
-                    App.enviar(encimg)
+                    App.enviar(datos)
+                    # App.enviar(encimg)
                 except queue.Full:
                     print('Cola de envío llena')
 
@@ -143,14 +143,14 @@ class Interfaz():
             try:
                 datos = App.recibir()
 
-                # dicc = Cabecera.quitar(datos)
-                # print('Cabecera quitada')
+                dicc = Cabecera.quitar(datos)
+                print('Cabecera quitada')
 
-                # res = dicc['res']
-                # width, height = res.split('x')
-                # fps = dicc['fps']
-                # encimg = dicc['datos']
-                encimg = datos
+                res = dicc['res']
+                width, height = res.split('x')
+                fps = dicc['fps']
+                encimg = dicc['datos']
+                # encimg = datos
 
 
                 # Descompresión de los datos, una vez recibidos
