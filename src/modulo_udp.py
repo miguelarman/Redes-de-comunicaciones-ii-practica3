@@ -1,6 +1,7 @@
 import socket
 import threading
 import time
+import queue
 
 from src.generales import *
 import src.aplicacion
