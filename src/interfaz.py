@@ -133,7 +133,8 @@ class Interfaz():
                 # datos = Cabecera.poner(width, height, fps, encimg)
 
                 try:
-                    App.enviar(datos)
+                    # App.enviar(datos)
+                    App.enviar(encimg)
                 except queue.Full:
                     print('Cola de envío llena')
 
