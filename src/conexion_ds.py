@@ -1,3 +1,11 @@
+"""
+    Prácticas de Redes de comunicaciones 2
+
+    Autores:
+        Miguel Arconada Manteca
+        Mario García Pascual
+"""
+
 import socket
 
 from src.generales import *

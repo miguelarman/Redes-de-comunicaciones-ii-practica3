@@ -1,3 +1,11 @@
+"""
+    Prácticas de Redes de comunicaciones 2
+
+    Autores:
+        Miguel Arconada Manteca
+        Mario García Pascual
+"""
+
 DS_ADDR = ('vega.ii.uam.es', 8000)
 BUFSIZE = 1048576
 UDP_SLEEP = 0.05
