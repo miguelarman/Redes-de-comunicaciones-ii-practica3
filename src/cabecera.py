@@ -1,5 +1,5 @@
 import time
-from parse import parse
+# from parse import parse
 
 class Cabecera:
     """
@@ -71,11 +71,12 @@ class Cabecera:
             Diccionario con la informacion de la cabecera y los datos
 
         """
-        foo = parse('{}#{}#{}#{}#{}', msg.decode())
+        # foo = parse('{}#{}#{}#{}#{}', msg.decode())
+        foo = msg.decode().split('#')
         return {
             'ord' : foo[0],
             'ts' : foo[1],
             'res' : foo[2],
             'fps' : foo[3],
-            'datos' : foo[4].encode()
+            'datos' : '#'.join(foo[4:]).encode()
         }
