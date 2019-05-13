@@ -58,7 +58,8 @@ class Cabecera:
         # timestamp
         ts = int(time.time())
 
-        header = "{:05d}#{:010d}#{:03d}x{:03d}#{:03d}#".format(int(ord), int(ts), int(ancho), int(alto), int(fps)).encode()
+        header = "{}#{}#{}x{}#{}#".format(int(ord), int(ts), int(ancho), int(alto), int(fps)).encode()
+        # header = "{:05d}#{:010d}#{:03d}x{:03d}#{:03d}#".format(int(ord), int(ts), int(ancho), int(alto), int(fps)).encode()
 
         return header + datos
 
@@ -79,15 +80,18 @@ class Cabecera:
 
         """
 
-        x = Cabecera.ord_len + 1 + Cabecera.frames_len + 1 + Cabecera.ts_len + 1 + Cabecera.size_len + 1
-        cabecera = msg[:x].decode()
-        framecod = msg[x:]
-
-        orden, ts, size, fps, _ = cabecera.split('#')
+        # x = Cabecera.ord_len + 1 + Cabecera.frames_len + 1 + Cabecera.ts_len + 1 + Cabecera.size_len + 1
+        # cabecera = msg[:x].decode()
+        # framecod = msg[x:]
+        #
+        # orden, ts, size, fps, _ = cabecera.split('#')
+        campos = msg.split(b'#')
+        orden, ts, size, fps = campos[:4]
+        framecod = b'#'.join(campos[4:])
 
         return {
-        'orden' : orden,
-        'fps' : fps,
-        'res' : size,
+        'orden' : orden.decode(),
+        'fps' : fps.decode(),
+        'res' : size.decode(),
         'datos' : framecod
         }
