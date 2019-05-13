@@ -2,9 +2,9 @@ import threading
 import collections
 import random
 
-from modulo_tcp import ModuloTCP
-from conexion_ds import ConexionDS
-from generales import *
+from src.modulo_tcp import ModuloTCP
+from src.conexion_ds import ConexionDS
+from src.generales import *
 
 class App:
     nick = None

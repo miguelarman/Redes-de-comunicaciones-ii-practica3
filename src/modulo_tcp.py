@@ -2,9 +2,9 @@ import socket
 import threading
 import time
 
-from generales import *
-from conexion_control import ConexionControl
-import aplicacion
+from src.generales import *
+from src.conexion_control import ConexionControl
+import src.aplicacion
 
 
 class ModuloTCP:

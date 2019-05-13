@@ -2,9 +2,9 @@ import threading
 import time
 import socket
 
-from generales import *
-from modulo_udp import ModuloUDP
-import aplicacion
+from src.generales import *
+from src.modulo_udp import ModuloUDP
+import src.aplicacion
 
 class ConexionControl:
     def __init__(self, conn):

@@ -1,6 +1,6 @@
 import socket
 
-from generales import *
+from src.generales import *
 
 class ConexionDS:
     def __init__(self):

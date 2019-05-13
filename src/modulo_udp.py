@@ -2,8 +2,8 @@ import socket
 import threading
 import time
 
-from generales import *
-import aplicacion
+from src.generales import *
+import src.aplicacion
 
 class ModuloUDP:
     def __init__(self):
