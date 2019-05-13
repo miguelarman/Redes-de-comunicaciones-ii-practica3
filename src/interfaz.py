@@ -126,15 +126,29 @@ class Interfaz():
                     print('Error al codificar imagen')
                     encimg = encimg.tobytes()
 
+                width = self.cap.get(3)
+                height = self.cap.get(4)
+                fps = self.cap.get(7)
+
+                datos = Cabecera.poner(width, height, fps, encimg)
+
                 try:
-                    App.enviar(encimg)
+                    App.enviar(datos)
                 except queue.Full:
                     print('Cola de envío llena')
 
     def muestraFrame(self):
         if App.on_call:
             try:
-                encimg = App.recibir()
+                datos = App.out_buf.get_nowait()
+
+                dicc = Cabecera.quitar(datos)
+
+                res = dicc['res']
+                width, height = res.split('x')
+                fps = dicc['fps']
+                encimg = dicc['datos']
+
 
                 # Descompresión de los datos, una vez recibidos
                 decimg = cv2.imdecode(np.frombuffer(encimg,np.uint8), 1)
@@ -144,6 +158,10 @@ class Interfaz():
                 img_tk = ImageTk.PhotoImage(Image.fromarray(cv2_im))
 
                 self.app.setImageData("video_recibido", img_tk, fmt = 'PhotoImage')
+                self.app.setImageSize('video_recibido', width, height)
+
+                self.app.setStatusbar("FPS: {}".format(fps), 0)
+
             except:
                 return
 
@@ -176,14 +194,15 @@ class Interfaz():
             print('No implementado todavía')
         elif button == 'Llamar':
             nick = self.app.stringBox('pregunta_nick', 'Nick del usuario a llamar')
-            print('Llamar a {}'.format(nick))
+            if nick:
+                print('Llamar a {}'.format(nick))
 
-            foo = App.llamar(nick)
-            if foo == None:
-                self.app.errorBox('sdfsdf', 'No se ha podido conectar con {}'.format(nick))
-            else:
-                self.app.showSubWindow('Llamada')
-                self.app.setLabel('label_video','Video de {}'.format(nick))
+                foo = App.llamar(nick)
+                if foo == None:
+                    self.app.errorBox('sdfsdf', 'No se ha podido conectar con {}'.format(nick))
+                else:
+                    self.app.showSubWindow('Llamada')
+                    self.app.setLabel('label_video','Video de {}'.format(nick))
         elif button == 'Pausar':
             App.pausar()
         elif button == 'Reanudar':
