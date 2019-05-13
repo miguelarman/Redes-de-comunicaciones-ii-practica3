@@ -35,10 +35,24 @@ class ConexionDS:
         data = self.sock.recv(BUFSIZE).decode()
 
         foo = data.split(' ')
-        if foo[0] == 'OK':
-            return ' '.join(foo[3:]).split('#')
-        else:
+        if foo[0] != 'OK':
             return None
+
+
+        num = foo[2]
+        list = data[len('OK USERS_LIST ') + len(str(num)) + 1:]
+        list = list.split('#')
+
+        print(list)
+
+        array = []
+        for entry in list:
+            # if len(entry) < 4:
+            #     continue
+
+            array.append(entry.split(' '))
+
+        return array
 
     def quit(self):
         cmd = 'QUIT'

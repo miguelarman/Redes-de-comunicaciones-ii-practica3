@@ -190,7 +190,26 @@ class Interfaz():
             App.stop()
             self.app.stop()
         elif button == 'Lista de usuarios':
-            print('No implementado todavía')
+            self.lista = App.lista_de_usuarios()
+
+            try:
+                self.app.startSubWindow('Usuarios', modal=True)
+            except appjar.ItemLookupError:
+                print('Ventana \'Usuarios\' ya abierta')
+                self.app.showSubWindow('Usuarios')
+                return
+
+            self.app.setSize(550, 600)
+            self.app.addLabel("lx", 'Usuarios disponibles para llamar')
+            self.app.addTable('tabla_usuarios', [['Nombre', 'Dirección IP', 'Puerto']], action = self.selecciona_lista_usuarios)
+            print('Añadiendo filas')
+            self.app.addTableRows('tabla_usuarios', self.lista)
+            print('Añadidas filas')
+            self.app.setTableWidth('tabla_usuarios', 500)
+            self.app.setTableHeight('tabla_usuarios', 550)
+            self.app.stopSubWindow()
+            self.app.showSubWindow('Usuarios')
+
         elif button == 'Llamar':
             nick = self.app.stringBox('pregunta_nick', 'Nick del usuario a llamar')
             if nick:
@@ -237,6 +256,22 @@ class Interfaz():
                 print('Login incorrecto')
                 self.app.errorBox("Login incorrecto", "Datos inválidos. Prueba de nuevo")
                 return
+
+    # Callback de la tabla de usuarios
+    def selecciona_lista_usuarios(self, index):
+        if self.lista:
+            nick, ip, puerto = self.lista[index][:-1]
+            puerto = int(puerto)
+
+            ret = self.app.okBox('Usuario seleccionado', 'Ha seleccionado al usuario {} con direccion {}:{}'.format(nick, ip, puerto))
+
+            if ret == False:
+                return
+
+            foo = App.llamar(nick)
+
+            if foo == True:
+                self.app.hideSubWindow('Usuarios')
 
 
 
